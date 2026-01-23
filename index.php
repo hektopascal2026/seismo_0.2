@@ -27,7 +27,8 @@ switch ($action) {
         // If search query exists, show search results instead of latest items
         if (!empty($searchQuery)) {
             $latestItems = searchFeedItems($pdo, $searchQuery, 100, $selectedTags);
-            $searchResultsCount = count($latestItems);
+            $searchEmails = searchEmails($pdo, $searchQuery, 100);
+            $searchResultsCount = count($latestItems) + count($searchEmails);
         } else {
             // Get latest 30 items from enabled feeds only, optionally filtered by tags
             if (!empty($selectedTags)) {
@@ -57,6 +58,45 @@ switch ($action) {
             }
             $searchResultsCount = null;
         }
+        
+        // Get emails and merge with feed items
+        if (!empty($searchQuery)) {
+            $emails = $searchEmails;
+        } else {
+            $emails = getEmailsForIndex($pdo, 30);
+        }
+        
+        // Merge and sort by date
+        $allItems = [];
+        
+        // Add feed items
+        foreach ($latestItems as $item) {
+            $dateValue = $item['published_date'] ?? $item['cached_at'] ?? null;
+            $allItems[] = [
+                'type' => 'feed',
+                'date' => $dateValue ? strtotime($dateValue) : 0,
+                'data' => $item
+            ];
+        }
+        
+        // Add emails
+        foreach ($emails as $email) {
+            $dateValue = $email['date_received'] ?? $email['date_utc'] ?? $email['created_at'] ?? $email['date_sent'] ?? null;
+            $allItems[] = [
+                'type' => 'email',
+                'date' => $dateValue ? strtotime($dateValue) : 0,
+                'data' => $email
+            ];
+        }
+        
+        // Sort by date (newest first)
+        usort($allItems, function($a, $b) {
+            return $b['date'] - $a['date'];
+        });
+        
+        // Limit to 30 items total (or more for search)
+        $limit = !empty($searchQuery) ? 200 : 30;
+        $allItems = array_slice($allItems, 0, $limit);
         
         // Get last feed refresh date/time
         $lastRefreshStmt = $pdo->query("SELECT MAX(last_fetched) as last_refresh FROM feeds WHERE last_fetched IS NOT NULL");
@@ -682,6 +722,260 @@ function refreshAllFeeds($pdo) {
     foreach ($feeds as $feed) {
         refreshFeed($pdo, $feed['id']);
     }
+}
+
+function getEmailsForIndex($pdo, $limit = 30) {
+    $emails = [];
+    
+    try {
+        // Find email table
+        $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        $tableName = null;
+        
+        foreach ($allTables as $table) {
+            if (strtolower($table) === 'fetched_emails') {
+                $tableName = $table;
+                break;
+            }
+        }
+        
+        if (!$tableName) {
+            foreach ($allTables as $table) {
+                if (strtolower($table) === 'emails' || strtolower($table) === 'email') {
+                    $tableName = $table;
+                    break;
+                }
+            }
+        }
+        
+        if (!$tableName) {
+            foreach ($allTables as $table) {
+                if (stripos($table, 'mail') !== false || stripos($table, 'email') !== false) {
+                    $tableName = $table;
+                    break;
+                }
+            }
+        }
+        
+        if ($tableName) {
+            // Get column names
+            $descStmt = $pdo->query("DESCRIBE `$tableName`");
+            $tableColumns = $descStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Check if this is the cronjob table structure
+            $isCronjobTable = in_array('from_addr', $tableColumns) && 
+                             (in_array('body_text', $tableColumns) || in_array('body_html', $tableColumns));
+            
+            if ($isCronjobTable) {
+                $selectClause = "
+                    id,
+                    subject,
+                    from_addr as from_email,
+                    from_addr as from_name,
+                    date_utc as date_received,
+                    date_utc as date_sent,
+                    body_text as text_body,
+                    body_html as html_body,
+                    created_at
+                ";
+                $orderBy = "created_at DESC";
+            } else {
+                $selectColumns = [];
+                $columnMap = [
+                    'id' => 'id',
+                    'subject' => 'subject',
+                    'from_email' => 'from_email',
+                    'from_name' => 'from_name',
+                    'created_at' => 'created_at',
+                    'date_received' => 'date_received',
+                    'date_sent' => 'date_sent',
+                    'text_body' => 'text_body',
+                    'html_body' => 'html_body'
+                ];
+                
+                foreach ($columnMap as $expected => $actual) {
+                    if (in_array($actual, $tableColumns)) {
+                        $selectColumns[] = "`$actual` as `$expected`";
+                    }
+                }
+                
+                if (empty($selectColumns)) {
+                    $selectClause = '*';
+                } else {
+                    $selectClause = implode(', ', $selectColumns);
+                }
+                
+                $orderBy = 'id DESC';
+                foreach (['created_at', 'date_utc', 'date_received', 'date_sent', 'id'] as $orderCol) {
+                    if (in_array($orderCol, $tableColumns)) {
+                        $orderBy = "`$orderCol` DESC";
+                        break;
+                    }
+                }
+            }
+            
+            $stmt = $pdo->query("
+                SELECT $selectClause
+                FROM `$tableName`
+                ORDER BY $orderBy
+                LIMIT $limit
+            ");
+            $emails = $stmt->fetchAll();
+            
+            // Post-process emails to parse from_addr if needed
+            foreach ($emails as &$email) {
+                if (isset($email['from_email']) && isset($email['from_name']) && 
+                    $email['from_email'] === $email['from_name'] && 
+                    !empty($email['from_email'])) {
+                    $fromAddr = $email['from_email'];
+                    if (preg_match('/^"([^"]+)"\s*<(.+)>$/', $fromAddr, $matches)) {
+                        $email['from_name'] = $matches[1];
+                        $email['from_email'] = $matches[2];
+                    } elseif (preg_match('/^(.+)\s*<(.+)>$/', $fromAddr, $matches)) {
+                        $email['from_name'] = trim($matches[1]);
+                        $email['from_email'] = $matches[2];
+                    } elseif (preg_match('/^(.+@.+)$/', $fromAddr)) {
+                        $email['from_email'] = $fromAddr;
+                        $email['from_name'] = '';
+                    }
+                }
+            }
+            unset($email);
+        }
+    } catch (PDOException $e) {
+        // Error getting emails, return empty array
+    }
+    
+    return $emails;
+}
+
+function searchEmails($pdo, $query, $limit = 100) {
+    $emails = [];
+    $searchTerm = '%' . $query . '%';
+    
+    try {
+        // Find email table
+        $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        $tableName = null;
+        
+        foreach ($allTables as $table) {
+            if (strtolower($table) === 'fetched_emails') {
+                $tableName = $table;
+                break;
+            }
+        }
+        
+        if (!$tableName) {
+            foreach ($allTables as $table) {
+                if (strtolower($table) === 'emails' || strtolower($table) === 'email') {
+                    $tableName = $table;
+                    break;
+                }
+            }
+        }
+        
+        if (!$tableName) {
+            foreach ($allTables as $table) {
+                if (stripos($table, 'mail') !== false || stripos($table, 'email') !== false) {
+                    $tableName = $table;
+                    break;
+                }
+            }
+        }
+        
+        if ($tableName) {
+            // Get column names
+            $descStmt = $pdo->query("DESCRIBE `$tableName`");
+            $tableColumns = $descStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Check if this is the cronjob table structure
+            $isCronjobTable = in_array('from_addr', $tableColumns) && 
+                             (in_array('body_text', $tableColumns) || in_array('body_html', $tableColumns));
+            
+            if ($isCronjobTable) {
+                $selectClause = "
+                    id,
+                    subject,
+                    from_addr as from_email,
+                    from_addr as from_name,
+                    date_utc as date_received,
+                    date_utc as date_sent,
+                    body_text as text_body,
+                    body_html as html_body,
+                    created_at
+                ";
+                $whereClause = "(subject LIKE ? OR body_text LIKE ? OR body_html LIKE ? OR from_addr LIKE ?)";
+                $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
+            } else {
+                $selectColumns = [];
+                $whereColumns = [];
+                $columnMap = [
+                    'id' => 'id',
+                    'subject' => 'subject',
+                    'from_email' => 'from_email',
+                    'from_name' => 'from_name',
+                    'created_at' => 'created_at',
+                    'date_received' => 'date_received',
+                    'date_sent' => 'date_sent',
+                    'text_body' => 'text_body',
+                    'html_body' => 'html_body'
+                ];
+                
+                foreach ($columnMap as $expected => $actual) {
+                    if (in_array($actual, $tableColumns)) {
+                        $selectColumns[] = "`$actual` as `$expected`";
+                        if (in_array($actual, ['subject', 'from_email', 'from_name', 'text_body', 'html_body'])) {
+                            $whereColumns[] = "`$actual` LIKE ?";
+                        }
+                    }
+                }
+                
+                if (empty($selectColumns)) {
+                    $selectClause = '*';
+                    $whereClause = "1=1";
+                    $params = [];
+                } else {
+                    $selectClause = implode(', ', $selectColumns);
+                    $whereClause = '(' . implode(' OR ', $whereColumns) . ')';
+                    $params = array_fill(0, count($whereColumns), $searchTerm);
+                }
+            }
+            
+            $stmt = $pdo->prepare("
+                SELECT $selectClause
+                FROM `$tableName`
+                WHERE $whereClause
+                ORDER BY created_at DESC, date_received DESC, id DESC
+                LIMIT $limit
+            ");
+            $stmt->execute($params);
+            $emails = $stmt->fetchAll();
+            
+            // Post-process emails to parse from_addr if needed
+            foreach ($emails as &$email) {
+                if (isset($email['from_email']) && isset($email['from_name']) && 
+                    $email['from_email'] === $email['from_name'] && 
+                    !empty($email['from_email'])) {
+                    $fromAddr = $email['from_email'];
+                    if (preg_match('/^"([^"]+)"\s*<(.+)>$/', $fromAddr, $matches)) {
+                        $email['from_name'] = $matches[1];
+                        $email['from_email'] = $matches[2];
+                    } elseif (preg_match('/^(.+)\s*<(.+)>$/', $fromAddr, $matches)) {
+                        $email['from_name'] = trim($matches[1]);
+                        $email['from_email'] = $matches[2];
+                    } elseif (preg_match('/^(.+@.+)$/', $fromAddr)) {
+                        $email['from_email'] = $fromAddr;
+                        $email['from_name'] = '';
+                    }
+                }
+            }
+            unset($email);
+        }
+    } catch (PDOException $e) {
+        // Error searching emails, return empty array
+    }
+    
+    return $emails;
 }
 
 function searchFeedItems($pdo, $query, $limit = 100, $selectedTags = []) {

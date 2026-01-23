@@ -93,43 +93,92 @@
                 </h2>
             <?php endif; ?>
             
-            <?php if (!empty($latestItems)): ?>
-                <?php foreach ($latestItems as $item): ?>
-                    <div class="entry-card">
-                        <div class="entry-header">
-                            <span class="entry-feed"><?= htmlspecialchars($item['feed_title']) ?></span>
-                            <?php if ($item['published_date']): ?>
-                                <span class="entry-date"><?= date('d.m.Y H:i', strtotime($item['published_date'])) ?></span>
+            <?php if (!empty($allItems)): ?>
+                <?php foreach ($allItems as $itemWrapper): ?>
+                    <?php if ($itemWrapper['type'] === 'feed'): ?>
+                        <?php $item = $itemWrapper['data']; ?>
+                        <div class="entry-card">
+                            <div class="entry-header">
+                                <span class="entry-feed"><?= htmlspecialchars($item['feed_title']) ?></span>
+                                <?php if ($item['published_date']): ?>
+                                    <span class="entry-date"><?= date('d.m.Y H:i', strtotime($item['published_date'])) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <h3 class="entry-title">
+                                <a href="<?= htmlspecialchars($item['link']) ?>" target="_blank" rel="noopener">
+                                    <?php if (!empty($searchQuery)): ?>
+                                        <?= highlightSearchTerm($item['title'], $searchQuery) ?>
+                                    <?php else: ?>
+                                        <?= htmlspecialchars($item['title']) ?>
+                                    <?php endif; ?>
+                                </a>
+                            </h3>
+                            <?php if ($item['description'] || $item['content']): ?>
+                                <div class="entry-content">
+                                    <?php 
+                                        $content = strip_tags($item['content'] ?: $item['description']);
+                                        $contentPreview = mb_substr($content, 0, 200);
+                                        if (mb_strlen($content) > 200) $contentPreview .= '...';
+                                        
+                                        if (!empty($searchQuery)) {
+                                            echo highlightSearchTerm($contentPreview, $searchQuery);
+                                        } else {
+                                            echo htmlspecialchars($contentPreview);
+                                        }
+                                    ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ($item['link']): ?>
+                                <a href="<?= htmlspecialchars($item['link']) ?>" target="_blank" rel="noopener" class="entry-link">Read more →</a>
                             <?php endif; ?>
                         </div>
-                        <h3 class="entry-title">
-                            <a href="<?= htmlspecialchars($item['link']) ?>" target="_blank" rel="noopener">
-                                <?php if (!empty($searchQuery)): ?>
-                                    <?= highlightSearchTerm($item['title'], $searchQuery) ?>
-                                <?php else: ?>
-                                    <?= htmlspecialchars($item['title']) ?>
+                    <?php else: ?>
+                        <?php $email = $itemWrapper['data']; ?>
+                        <?php
+                            // Get date from various possible fields
+                            $dateValue = $email['date_received'] ?? $email['date_utc'] ?? $email['created_at'] ?? $email['date_sent'] ?? null;
+                            $createdAt = $dateValue ? date('d.m.Y H:i', strtotime($dateValue)) : '';
+                            
+                            $fromName = trim((string)($email['from_name'] ?? ''));
+                            $fromEmail = trim((string)($email['from_email'] ?? ''));
+                            $fromDisplay = $fromName !== '' ? $fromName : ($fromEmail !== '' ? $fromEmail : 'Unknown sender');
+
+                            $subject = trim((string)($email['subject'] ?? ''));
+                            if ($subject === '') $subject = '(No subject)';
+
+                            $body = (string)($email['text_body'] ?? '');
+                            if ($body === '') {
+                                $body = strip_tags((string)($email['html_body'] ?? ''));
+                            }
+                            $body = trim(preg_replace('/\s+/', ' ', $body ?? ''));
+                            $bodyPreview = mb_substr($body, 0, 200);
+                            if (mb_strlen($body) > 200) $bodyPreview .= '...';
+                        ?>
+                        <div class="entry-card">
+                            <div class="entry-header">
+                                <span class="entry-feed"><?= htmlspecialchars($fromDisplay) ?></span>
+                                <?php if ($createdAt): ?>
+                                    <span class="entry-date"><?= htmlspecialchars($createdAt) ?></span>
                                 <?php endif; ?>
-                            </a>
-                        </h3>
-                        <?php if ($item['description'] || $item['content']): ?>
+                            </div>
+                            <h3 class="entry-title">
+                                <?php if (!empty($searchQuery)): ?>
+                                    <?= highlightSearchTerm($subject, $searchQuery) ?>
+                                <?php else: ?>
+                                    <?= htmlspecialchars($subject) ?>
+                                <?php endif; ?>
+                            </h3>
                             <div class="entry-content">
                                 <?php 
-                                    $content = strip_tags($item['content'] ?: $item['description']);
-                                    $contentPreview = mb_substr($content, 0, 200);
-                                    if (mb_strlen($content) > 200) $contentPreview .= '...';
-                                    
                                     if (!empty($searchQuery)) {
-                                        echo highlightSearchTerm($contentPreview, $searchQuery);
+                                        echo highlightSearchTerm($bodyPreview, $searchQuery);
                                     } else {
-                                        echo htmlspecialchars($contentPreview);
+                                        echo htmlspecialchars($bodyPreview);
                                     }
                                 ?>
                             </div>
-                        <?php endif; ?>
-                        <?php if ($item['link']): ?>
-                            <a href="<?= htmlspecialchars($item['link']) ?>" target="_blank" rel="noopener" class="entry-link">Read more →</a>
-                        <?php endif; ?>
-                    </div>
+                        </div>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             <?php else: ?>
                 <div class="empty-state">
