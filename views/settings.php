@@ -109,23 +109,6 @@
             background-color: #f0fff0;
         }
         
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            border: 1px solid #000000;
-        }
-        
-        .status-badge.active {
-            background-color: #00aa00;
-            color: #ffffff;
-        }
-        
-        .status-badge.inactive {
-            background-color: #ffffff;
-            color: #000000;
-        }
     </style>
 </head>
 <body>
@@ -162,6 +145,28 @@
         <!-- RSS Section -->
         <section class="settings-section">
             <h2>RSS</h2>
+            
+            <!-- All Tags Section -->
+            <?php if (!empty($allTags)): ?>
+                <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #000000; background-color: #ffffff;">
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #000000;">All Tags</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <?php foreach ($allTags as $tag): ?>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #000000; background-color: #ffffff;">
+                                <span style="font-weight: 600;"><?= htmlspecialchars($tag) ?></span>
+                                <button 
+                                    class="btn btn-danger" 
+                                    style="font-size: 12px; padding: 4px 8px;"
+                                    onclick="renameTag('<?= htmlspecialchars($tag, ENT_QUOTES) ?>', this)"
+                                    title="Rename tag">
+                                    Rename
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
             <p>Manage your RSS feeds. Deactivate or delete feeds you no longer need.</p>
             
             <?php if (empty($allFeeds)): ?>
@@ -175,26 +180,36 @@
                             <div class="settings-item-info">
                                 <div class="settings-item-title"><?= htmlspecialchars($feed['title']) ?></div>
                                 <div class="settings-item-meta"><?= htmlspecialchars($feed['url']) ?></div>
-                                <?php if ($feed['category']): ?>
-                                    <span class="settings-item-tag"><?= htmlspecialchars($feed['category']) ?></span>
-                                <?php endif; ?>
                                 <?php if ($feed['last_fetched']): ?>
                                     <div class="settings-item-meta">Last updated: <?= date('d.m.Y H:i', strtotime($feed['last_fetched'])) ?></div>
                                 <?php endif; ?>
                             </div>
-                            <div class="settings-item-actions">
-                                <span class="status-badge <?= $feed['disabled'] ? 'inactive' : 'active' ?>">
-                                    <?= $feed['disabled'] ? 'Inactive' : 'Active' ?>
-                                </span>
-                                <a href="?action=toggle_feed&id=<?= $feed['id'] ?>&from=settings" class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">
-                                    <?= $feed['disabled'] ? 'Activate' : 'Deactivate' ?>
-                                </a>
-                                <a href="?action=delete_feed&id=<?= $feed['id'] ?>&from=settings" 
-                                   class="btn btn-danger" 
-                                   onclick="return confirm('Are you sure you want to delete this feed? This action cannot be undone.');"
-                                   style="font-size: 14px; padding: 8px 16px;">
-                                    Delete
-                                </a>
+                            <div class="settings-item-actions" style="flex-direction: column; align-items: flex-end; gap: 10px;">
+                                <div style="display: flex; gap: 10px;">
+                                    <a href="?action=toggle_feed&id=<?= $feed['id'] ?>&from=settings" class="btn <?= $feed['disabled'] ? 'btn-success' : 'btn-warning' ?>" style="font-size: 14px; padding: 8px 16px;">
+                                        <?= $feed['disabled'] ? 'Enable' : 'Disable' ?>
+                                    </a>
+                                    <a href="?action=delete_feed&id=<?= $feed['id'] ?>&from=settings" 
+                                       class="btn btn-danger" 
+                                       onclick="return confirm('Are you sure you want to delete this feed? This action cannot be undone.');"
+                                       style="font-size: 14px; padding: 8px 16px;">
+                                        Delete
+                                    </a>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <label style="font-weight: 600; font-size: 14px;">Tag:</label>
+                                    <div class="tag-input-wrapper">
+                                        <input 
+                                            type="text" 
+                                            class="tag-input feed-tag-input" 
+                                            value="<?= htmlspecialchars($feed['category'] ?? 'unsortiert') ?>" 
+                                            data-feed-id="<?= $feed['id'] ?>"
+                                            data-original-tag="<?= htmlspecialchars($feed['category'] ?? 'unsortiert') ?>"
+                                            style="width: 150px;"
+                                        >
+                                        <span class="feed-tag-indicator"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -244,8 +259,224 @@
     </div>
 
     <script>
+        // Feed tag management (same as feeds.php)
+        (function() {
+            let allTags = [];
+            let currentSuggestions = [];
+            let activeInput = null;
+            let suggestionList = null;
+            
+            // Load all tags on page load
+            fetch('?action=api_tags')
+                .then(response => response.json())
+                .then(tags => {
+                    allTags = tags;
+                })
+                .catch(err => console.error('Error loading tags:', err));
+            
+            // Create suggestion dropdown
+            function createSuggestionList() {
+                const list = document.createElement('ul');
+                list.className = 'feed-tag-suggestions';
+                list.style.display = 'none';
+                document.body.appendChild(list);
+                return list;
+            }
+            
+            suggestionList = createSuggestionList();
+            
+            // Show suggestions
+            function showSuggestions(input, suggestions) {
+                if (!suggestions.length) {
+                    suggestionList.style.display = 'none';
+                    return;
+                }
+                
+                suggestionList.innerHTML = '';
+                suggestions.forEach(tag => {
+                    const li = document.createElement('li');
+                    li.textContent = tag;
+                    li.addEventListener('click', () => {
+                        input.value = tag;
+                        input.dispatchEvent(new Event('input'));
+                        hideSuggestions();
+                    });
+                    suggestionList.appendChild(li);
+                });
+                
+                const rect = input.getBoundingClientRect();
+                suggestionList.style.top = (rect.bottom + window.scrollY) + 'px';
+                suggestionList.style.left = (rect.left + window.scrollX) + 'px';
+                suggestionList.style.width = rect.width + 'px';
+                suggestionList.style.display = 'block';
+            }
+            
+            function hideSuggestions() {
+                suggestionList.style.display = 'none';
+            }
+            
+            // Filter tags based on input
+            function filterTags(query) {
+                if (!query || query === 'unsortiert') {
+                    return [];
+                }
+                const lowerQuery = query.toLowerCase();
+                return allTags.filter(tag => 
+                    tag.toLowerCase().includes(lowerQuery) && tag !== query
+                ).slice(0, 5);
+            }
+            
+            // Check if tag is new
+            function isNewTag(tag) {
+                return tag && tag !== 'unsortiert' && !allTags.includes(tag);
+            }
+            
+            // Update indicator
+            function updateIndicator(input, value) {
+                const indicator = input.parentElement.querySelector('.feed-tag-indicator');
+                if (indicator) {
+                    if (isNewTag(value)) {
+                        indicator.textContent = 'new';
+                        indicator.className = 'feed-tag-indicator feed-tag-new';
+                    } else {
+                        indicator.textContent = '';
+                        indicator.className = 'feed-tag-indicator';
+                    }
+                }
+            }
+            
+            // Handle feed tag inputs
+            document.querySelectorAll('.feed-tag-input').forEach(input => {
+                input.addEventListener('focus', function() {
+                    activeInput = this;
+                    const value = this.value.trim();
+                    if (value && value !== 'unsortiert') {
+                        const suggestions = filterTags(value);
+                        showSuggestions(this, suggestions);
+                    }
+                    updateIndicator(this, value);
+                });
+                
+                input.addEventListener('input', function() {
+                    const value = this.value.trim();
+                    updateIndicator(this, value);
+                    
+                    if (value && value !== 'unsortiert') {
+                        const suggestions = filterTags(value);
+                        showSuggestions(this, suggestions);
+                    } else {
+                        hideSuggestions();
+                    }
+                });
+                
+                input.addEventListener('blur', function() {
+                    setTimeout(() => hideSuggestions(), 200);
+                });
+                
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const value = this.value.trim();
+                        
+                        if (!value || value === '') {
+                            this.value = this.dataset.originalTag || 'unsortiert';
+                            updateIndicator(this, this.value);
+                            hideSuggestions();
+                            return;
+                        }
+                        
+                        const feedId = this.dataset.feedId;
+                        const formData = new FormData();
+                        formData.append('feed_id', feedId);
+                        formData.append('tag', value);
+                        
+                        this.classList.add('feed-tag-saving');
+                        
+                        fetch('?action=update_feed_tag', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.dataset.originalTag = value;
+                                this.classList.remove('feed-tag-saving');
+                                this.classList.add('feed-tag-saved');
+                                setTimeout(() => {
+                                    this.classList.remove('feed-tag-saved');
+                                }, 2000);
+                                this.blur();
+                                hideSuggestions();
+                                return fetch('?action=api_tags');
+                            } else {
+                                this.classList.remove('feed-tag-saving');
+                                alert('Error: ' + (data.error || 'Failed to update tag'));
+                            }
+                        })
+                        .then(response => response ? response.json() : null)
+                        .then(tags => {
+                            if (tags) {
+                                allTags = tags;
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error updating tag:', err);
+                            this.classList.remove('feed-tag-saving');
+                            alert('Error updating tag');
+                        });
+                    } else if (e.key === 'Escape') {
+                        this.value = this.dataset.originalTag || 'unsortiert';
+                        updateIndicator(this, this.value);
+                        hideSuggestions();
+                        this.blur();
+                    }
+                });
+            });
+            
+            // Close suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.feed-tag-input-wrapper') && !e.target.closest('.feed-tag-suggestions')) {
+                    hideSuggestions();
+                }
+            });
+        })();
+        
+        // Rename tag function
+        function renameTag(oldTag, button) {
+            const newTag = prompt('Enter new tag name:', oldTag);
+            if (newTag && newTag.trim() !== '' && newTag.trim() !== oldTag) {
+                const formData = new FormData();
+                formData.append('old_tag', oldTag);
+                formData.append('new_tag', newTag.trim());
+                
+                button.disabled = true;
+                button.textContent = 'Renaming...';
+                
+                fetch('?action=rename_tag', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to rename tag'));
+                        button.disabled = false;
+                        button.textContent = 'Rename';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error renaming tag:', err);
+                    alert('Error renaming tag');
+                    button.disabled = false;
+                    button.textContent = 'Rename';
+                });
+            }
+        }
+        
         // Handle sender tag updates
-        document.querySelectorAll('.tag-input').forEach(function(input) {
+        document.querySelectorAll('.tag-input:not(.feed-tag-input)').forEach(function(input) {
             input.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
