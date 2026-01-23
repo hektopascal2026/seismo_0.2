@@ -161,6 +161,17 @@ function initDatabase() {
         // If INFORMATION_SCHEMA query fails, try to add columns anyway (will fail gracefully if they exist)
         // This is a fallback for older MySQL versions or permission issues
     }
+    
+    // Create sender_tags table for managing email sender tags
+    $pdo->exec("CREATE TABLE IF NOT EXISTS sender_tags (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        from_email VARCHAR(255) NOT NULL UNIQUE,
+        tag VARCHAR(100) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_from_email (from_email),
+        INDEX idx_tag (tag)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 }
 
 /**

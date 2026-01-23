@@ -374,6 +374,111 @@ switch ($action) {
         handleDeleteEmail($pdo);
         break;
         
+    case 'settings':
+        // Show settings page
+        $pdo = getDbConnection();
+        
+        // Get all feeds for RSS section
+        $feedsStmt = $pdo->query("SELECT * FROM feeds ORDER BY created_at DESC");
+        $allFeeds = $feedsStmt->fetchAll();
+        
+        // Get all unique senders and their tags for Mail section
+        $senderTags = [];
+        try {
+            // Find email table
+            $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+            $emailTableName = null;
+            
+            foreach ($allTables as $table) {
+                if (strtolower($table) === 'fetched_emails') {
+                    $emailTableName = $table;
+                    break;
+                }
+            }
+            
+            if (!$emailTableName) {
+                foreach ($allTables as $table) {
+                    if (strtolower($table) === 'emails' || strtolower($table) === 'email') {
+                        $emailTableName = $table;
+                        break;
+                    }
+                }
+            }
+            
+            if (!$emailTableName) {
+                foreach ($allTables as $table) {
+                    if (stripos($table, 'mail') !== false || stripos($table, 'email') !== false) {
+                        $emailTableName = $table;
+                        break;
+                    }
+                }
+            }
+            
+            if ($emailTableName) {
+                // Get column names to determine which columns exist
+                $descStmt = $pdo->query("DESCRIBE `$emailTableName`");
+                $tableColumns = $descStmt->fetchAll(PDO::FETCH_COLUMN);
+                
+                // Determine which columns to use
+                $hasFromEmail = in_array('from_email', $tableColumns);
+                $hasFromAddr = in_array('from_addr', $tableColumns);
+                $hasFromName = in_array('from_name', $tableColumns);
+                
+                // Build query based on available columns
+                if ($hasFromEmail && $hasFromName) {
+                    $sendersStmt = $pdo->query("
+                        SELECT DISTINCT 
+                            from_email as email,
+                            COALESCE(from_name, '') as name
+                        FROM `$emailTableName`
+                        WHERE from_email IS NOT NULL AND from_email != ''
+                        ORDER BY from_email
+                    ");
+                } elseif ($hasFromAddr) {
+                    $sendersStmt = $pdo->query("
+                        SELECT DISTINCT 
+                            from_addr as email,
+                            '' as name
+                        FROM `$emailTableName`
+                        WHERE from_addr IS NOT NULL AND from_addr != ''
+                        ORDER BY from_addr
+                    ");
+                } else {
+                    $sendersStmt = null;
+                }
+                
+                if ($sendersStmt) {
+                    $senders = $sendersStmt->fetchAll();
+                } else {
+                    $senders = [];
+                }
+                
+                // Get tags for each sender
+                foreach ($senders as $sender) {
+                    $email = $sender['email'];
+                    $tagStmt = $pdo->prepare("SELECT tag FROM sender_tags WHERE from_email = ?");
+                    $tagStmt->execute([$email]);
+                    $tagResult = $tagStmt->fetch();
+                    $tag = $tagResult ? $tagResult['tag'] : null;
+                    
+                    $senderTags[] = [
+                        'email' => $email,
+                        'name' => $sender['name'],
+                        'tag' => $tag
+                    ];
+                }
+            }
+        } catch (PDOException $e) {
+            // Error getting senders
+        }
+        
+        include 'views/settings.php';
+        break;
+        
+    case 'update_sender_tag':
+        handleUpdateSenderTag($pdo);
+        break;
+        
     case 'styleguide':
         // Get last code change date (use modification time of index.php)
         $lastChangeDate = date('d.m.Y', filemtime(__FILE__));
@@ -437,16 +542,19 @@ function handleAddFeed($pdo) {
 
 function handleDeleteFeed($pdo) {
     $feedId = (int)$_GET['id'] ?? 0;
+    $from = $_GET['from'] ?? 'feeds';
     
     $stmt = $pdo->prepare("DELETE FROM feeds WHERE id = ?");
     $stmt->execute([$feedId]);
     
     $_SESSION['success'] = 'Feed deleted successfully';
-    header('Location: ?action=feeds');
+    $redirectUrl = $from === 'settings' ? '?action=settings' : '?action=feeds';
+    header('Location: ' . $redirectUrl);
 }
 
 function handleToggleFeed($pdo) {
     $feedId = (int)$_GET['id'] ?? 0;
+    $from = $_GET['from'] ?? 'feeds';
     
     // Get current disabled status
     $stmt = $pdo->prepare("SELECT disabled FROM feeds WHERE id = ?");
@@ -455,7 +563,8 @@ function handleToggleFeed($pdo) {
     
     if (!$feed) {
         $_SESSION['error'] = 'Feed not found';
-        header('Location: ?action=feeds');
+        $redirectUrl = $from === 'settings' ? '?action=settings' : '?action=feeds';
+        header('Location: ' . $redirectUrl);
         return;
     }
     
@@ -466,7 +575,8 @@ function handleToggleFeed($pdo) {
     
     $statusText = $newStatus ? 'disabled' : 'enabled';
     $_SESSION['success'] = 'Feed ' . $statusText . ' successfully';
-    header('Location: ?action=feeds');
+    $redirectUrl = $from === 'settings' ? '?action=settings' : '?action=feeds';
+    header('Location: ' . $redirectUrl);
 }
 
 function viewFeed($pdo, $feedId) {
@@ -638,6 +748,24 @@ function handleUpdateFeedTag($pdo) {
     // Update feed tag
     $stmt = $pdo->prepare("UPDATE feeds SET category = ? WHERE id = ?");
     $stmt->execute([$tag, $feedId]);
+    
+    echo json_encode(['success' => true, 'tag' => $tag]);
+}
+
+function handleUpdateSenderTag($pdo) {
+    header('Content-Type: application/json');
+    
+    $fromEmail = trim($_POST['from_email'] ?? '');
+    $tag = trim($_POST['tag'] ?? '');
+    
+    if (empty($fromEmail)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid sender email']);
+        return;
+    }
+    
+    // Insert or update sender tag
+    $stmt = $pdo->prepare("INSERT INTO sender_tags (from_email, tag) VALUES (?, ?) ON DUPLICATE KEY UPDATE tag = ?");
+    $stmt->execute([$fromEmail, $tag, $tag]);
     
     echo json_encode(['success' => true, 'tag' => $tag]);
 }

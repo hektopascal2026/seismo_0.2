@@ -19,6 +19,7 @@
             </a>
             <a href="?action=feeds" class="nav-link">Feeds</a>
             <a href="?action=mail" class="nav-link">Mail</a>
+            <a href="?action=settings" class="nav-link">Settings</a>
         </nav>
 
         <header>
