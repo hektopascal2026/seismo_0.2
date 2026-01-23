@@ -370,6 +370,12 @@ switch ($action) {
         header('Location: ' . $redirectUrl);
         break;
         
+    case 'styleguide':
+        // Get last code change date (use modification time of index.php)
+        $lastChangeDate = date('d.m.Y', filemtime(__FILE__));
+        include 'views/styleguide.php';
+        break;
+        
     default:
         header('Location: ?action=index');
         break;
