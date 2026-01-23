@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => 'seismo/rss-reader',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '8a796c19341fac6af69a2c5c1c482f9fade786d4',
+        'type' => 'project',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
+    ),
+    'versions' => array(
+        'php-mime-mail-parser/php-mime-mail-parser' => array(
+            'pretty_version' => 'v1.0.0',
+            'version' => '1.0.0.0',
+            'reference' => 'bd5b876742301b0e54c06527f807378789cfc5bb',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../php-mime-mail-parser/php-mime-mail-parser',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'seismo/rss-reader' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '8a796c19341fac6af69a2c5c1c482f9fade786d4',
+            'type' => 'project',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'simplepie/simplepie' => array(
+            'pretty_version' => '1.9.0',
+            'version' => '1.9.0.0',
+            'reference' => '76cccb1b2c5dcaf44f304c925ab30c0f48643992',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../simplepie/simplepie',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);
