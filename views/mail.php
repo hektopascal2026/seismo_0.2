@@ -81,6 +81,16 @@
                         </div>
                         <h3 class="entry-title"><?= htmlspecialchars($subject) ?></h3>
                         <div class="entry-content"><?= htmlspecialchars($bodyPreview) ?></div>
+                        <?php if (isset($email['id'])): ?>
+                            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                                <a href="?action=delete_email&id=<?= (int)$email['id'] ?>&confirm=yes" 
+                                   class="btn btn-danger" 
+                                   onclick="return confirm('Are you sure you want to delete this email? This action cannot be undone.');"
+                                   style="font-size: 14px; padding: 8px 16px;">
+                                    Delete Email
+                                </a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>

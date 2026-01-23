@@ -370,6 +370,10 @@ switch ($action) {
         header('Location: ' . $redirectUrl);
         break;
         
+    case 'delete_email':
+        handleDeleteEmail($pdo);
+        break;
+        
     case 'styleguide':
         // Get last code change date (use modification time of index.php)
         $lastChangeDate = date('d.m.Y', filemtime(__FILE__));
@@ -636,6 +640,80 @@ function handleUpdateFeedTag($pdo) {
     $stmt->execute([$tag, $feedId]);
     
     echo json_encode(['success' => true, 'tag' => $tag]);
+}
+
+function handleDeleteEmail($pdo) {
+    $emailId = (int)($_GET['id'] ?? 0);
+    $confirm = isset($_GET['confirm']) && $_GET['confirm'] === 'yes';
+    
+    if (!$emailId) {
+        $_SESSION['error'] = 'Invalid email ID';
+        header('Location: ?action=mail');
+        return;
+    }
+    
+    // Require confirmation parameter (prevents accidental deletions from direct URL access)
+    if (!$confirm) {
+        $_SESSION['error'] = 'Deletion requires confirmation';
+        header('Location: ?action=mail');
+        return;
+    }
+    
+    try {
+        // Find the email table (same logic as in mail case)
+        $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        $tableName = null;
+        
+        foreach ($allTables as $table) {
+            if (strtolower($table) === 'fetched_emails') {
+                $tableName = $table;
+                break;
+            }
+        }
+        
+        if (!$tableName) {
+            foreach ($allTables as $table) {
+                if (strtolower($table) === 'emails' || strtolower($table) === 'email') {
+                    $tableName = $table;
+                    break;
+                }
+            }
+        }
+        
+        if (!$tableName) {
+            foreach ($allTables as $table) {
+                if (stripos($table, 'mail') !== false || stripos($table, 'email') !== false) {
+                    $tableName = $table;
+                    break;
+                }
+            }
+        }
+        
+        if (!$tableName) {
+            $_SESSION['error'] = 'Email table not found';
+            header('Location: ?action=mail');
+            return;
+        }
+        
+        // Verify email exists before deleting
+        $checkStmt = $pdo->prepare("SELECT id FROM `$tableName` WHERE id = ?");
+        $checkStmt->execute([$emailId]);
+        if (!$checkStmt->fetch()) {
+            $_SESSION['error'] = 'Email not found';
+            header('Location: ?action=mail');
+            return;
+        }
+        
+        // Safe delete using prepared statement
+        $deleteStmt = $pdo->prepare("DELETE FROM `$tableName` WHERE id = ?");
+        $deleteStmt->execute([$emailId]);
+        
+        $_SESSION['success'] = 'Email deleted successfully';
+    } catch (PDOException $e) {
+        $_SESSION['error'] = 'Error deleting email: ' . $e->getMessage();
+    }
+    
+    header('Location: ?action=mail');
 }
 
 function refreshEmails($pdo) {
