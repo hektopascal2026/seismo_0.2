@@ -343,12 +343,12 @@
         <!-- Borders Section -->
         <section class="styleguide-section">
             <h2>Borders</h2>
-            <p>Borders are consistently 2px solid black (#000000) for primary elements, and 1px for subtle dividers.</p>
+            <p>Borders use 2px solid black (#000000) for primary elements like buttons, cards, and navigation tabs, and 1px for subtle dividers.</p>
             
             <div class="component-demo">
-                <div style="border: 2px solid #000000; padding: 20px; margin: 10px 0;">2px solid border (primary)</div>
-                <div style="border: 1px solid #000000; padding: 20px; margin: 10px 0;">1px solid border (secondary)</div>
-                <div style="border: 1px solid #cccccc; padding: 20px; margin: 10px 0;">1px solid border (subtle)</div>
+                <div style="border: 2px solid #000000; padding: 20px; margin: 10px 0;">2px solid border (primary - buttons, cards)</div>
+                <div style="border: 2px solid #000000; padding: 20px; margin: 10px 0;">2px solid border (navigation tabs)</div>
+                <div style="border: 1px solid #cccccc; padding: 20px; margin: 10px 0;">1px solid border (subtle dividers)</div>
             </div>
         </section>
     </div>

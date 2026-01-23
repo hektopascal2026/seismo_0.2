@@ -44,6 +44,11 @@ body {
     top: 2px;
 }
 
+.nav-link + .nav-link {
+    /* Prevent 4px seams where adjacent tab borders touch */
+    margin-left: -2px;
+}
+
 .nav-link:hover {
     background-color: #f5f5f5;
 }
@@ -796,6 +801,10 @@ header h2 {
 
     .nav-link:last-child {
         border-bottom: 2px solid #000000;
+    }
+
+    .nav-link + .nav-link {
+        margin-left: 0;
     }
 
     header h1 {
