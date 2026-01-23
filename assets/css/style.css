@@ -35,7 +35,9 @@ body {
     font-size: 16px;
     font-weight: 600;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
     transition: all 0.2s;
     font-family: inherit;
     position: relative;
@@ -51,6 +53,18 @@ body {
     color: #ffffff;
 }
 
+.logo-icon {
+    display: inline-block;
+    vertical-align: middle;
+    height: 1em;
+    width: auto;
+    margin-right: 0.3em;
+}
+
+.logo-icon-large {
+    height: 1em;
+}
+
 header {
     margin-bottom: 40px;
     border-bottom: 2px solid #000000;
@@ -62,6 +76,9 @@ header h1 {
     font-weight: 700;
     margin-bottom: 8px;
     color: #000000;
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
 }
 
 header h2 {

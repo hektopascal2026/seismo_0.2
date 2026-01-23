@@ -10,7 +10,13 @@
     <div class="container">
         <!-- Navigation Menu -->
         <nav class="main-nav">
-            <a href="?action=index" class="nav-link">Seismo</a>
+            <a href="?action=index" class="nav-link">
+                <svg class="logo-icon" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="16" fill="#FFFFC5"/>
+                    <path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Seismo
+            </a>
             <a href="?action=feeds" class="nav-link active">Feeds</a>
             <a href="?action=mail" class="nav-link">Mail</a>
         </nav>
