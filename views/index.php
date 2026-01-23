@@ -17,7 +17,7 @@
 
         <header>
             <h1>Seismo</h1>
-            <p class="subtitle">Ein Prototyp von hektopascal.org | v0.1</p>
+            <p class="subtitle">ein Prototyp von hektopascal.org | v0.2</p>
         </header>
 
         <?php if (isset($_SESSION['success'])): ?>

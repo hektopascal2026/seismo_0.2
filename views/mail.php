@@ -17,7 +17,7 @@
 
         <header>
             <h1>Mail</h1>
-            <p class="subtitle">Mail management | <?= $lastChangeDate ?></p>
+            <p class="subtitle">Mail management</p>
         </header>
 
         <?php if (isset($_SESSION['success'])): ?>

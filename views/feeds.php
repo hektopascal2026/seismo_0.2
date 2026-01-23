@@ -17,7 +17,7 @@
 
         <header>
             <h1>Feeds</h1>
-            <p class="subtitle">Manage your RSS feeds | <?= $lastChangeDate ?></p>
+            <p class="subtitle">RSS management</p>
         </header>
 
         <?php if (isset($_SESSION['success'])): ?>
