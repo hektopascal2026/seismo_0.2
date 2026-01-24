@@ -32,7 +32,7 @@ switch ($action) {
         // If search query exists, show search results instead of latest items
         if (!empty($searchQuery)) {
             $latestItems = searchFeedItems($pdo, $searchQuery, 100, $selectedTags);
-            $searchEmails = searchEmails($pdo, $searchQuery, 100);
+            $searchEmails = searchEmails($pdo, $searchQuery, 100, $selectedEmailTags);
             $searchResultsCount = count($latestItems) + count($searchEmails);
         } else {
             // Get latest 30 items from enabled feeds only, optionally filtered by tags
@@ -997,11 +997,24 @@ function getEmailsForIndex($pdo, $limit = 30, $selectedEmailTags = []) {
     return $emails;
 }
 
-function searchEmails($pdo, $query, $limit = 100) {
+function searchEmails($pdo, $query, $limit = 100, $selectedEmailTags = []) {
     $emails = [];
     $searchTerm = '%' . $query . '%';
     
     try {
+        // Get disabled sender emails
+        $disabledStmt = $pdo->query("SELECT from_email FROM sender_tags WHERE disabled = 1");
+        $disabledEmails = $disabledStmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Get emails by selected tags if any
+        $taggedEmails = [];
+        if (!empty($selectedEmailTags)) {
+            $tagPlaceholders = implode(',', array_fill(0, count($selectedEmailTags), '?'));
+            $tagStmt = $pdo->prepare("SELECT from_email FROM sender_tags WHERE tag IN ($tagPlaceholders)");
+            $tagStmt->execute($selectedEmailTags);
+            $taggedEmails = $tagStmt->fetchAll(PDO::FETCH_COLUMN);
+        }
+        
         // Find email table
         $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
         $tableName = null;
@@ -1089,14 +1102,45 @@ function searchEmails($pdo, $query, $limit = 100) {
                 }
             }
             
+            // Build WHERE clause to exclude disabled senders and filter by tags
+            $whereParts = [$whereClause];
+            $whereParams = $params;
+            
+            // Exclude disabled senders
+            if (!empty($disabledEmails)) {
+                $placeholders = implode(',', array_fill(0, count($disabledEmails), '?'));
+                if ($isCronjobTable) {
+                    $whereParts[] = "from_addr NOT IN ($placeholders)";
+                } else {
+                    $whereParts[] = "from_email NOT IN ($placeholders)";
+                }
+                $whereParams = array_merge($whereParams, $disabledEmails);
+            }
+            
+            // Filter by email tags if selected
+            if (!empty($selectedEmailTags) && !empty($taggedEmails)) {
+                $tagPlaceholders = implode(',', array_fill(0, count($taggedEmails), '?'));
+                if ($isCronjobTable) {
+                    $whereParts[] = "from_addr IN ($tagPlaceholders)";
+                } else {
+                    $whereParts[] = "from_email IN ($tagPlaceholders)";
+                }
+                $whereParams = array_merge($whereParams, $taggedEmails);
+            } elseif (!empty($selectedEmailTags) && empty($taggedEmails)) {
+                // No emails with selected tags, return empty
+                return [];
+            }
+            
+            $finalWhereClause = implode(' AND ', $whereParts);
+            
             $stmt = $pdo->prepare("
                 SELECT $selectClause
                 FROM `$tableName`
-                WHERE $whereClause
+                WHERE $finalWhereClause
                 ORDER BY created_at DESC, date_received DESC, id DESC
                 LIMIT $limit
             ");
-            $stmt->execute($params);
+            $stmt->execute($whereParams);
             $emails = $stmt->fetchAll();
             
             // Post-process emails to parse from_addr if needed

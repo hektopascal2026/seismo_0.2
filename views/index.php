@@ -48,7 +48,7 @@
             <form method="GET" action="?action=index" class="search-form">
                 <input type="search" name="q" placeholder="Search..." class="search-input" value="<?= htmlspecialchars($searchQuery ?? '') ?>">
                 <button type="submit" class="btn btn-primary">Search</button>
-                <?php if (!empty($searchQuery) || !empty($selectedTags) || !empty($selectedEmailTags ?? []): ?>
+                <?php if (!empty($searchQuery) || !empty($selectedTags) || !empty($selectedEmailTags)): ?>
                     <a href="?action=index" class="btn btn-secondary">Clear</a>
                 <?php endif; ?>
 
@@ -58,7 +58,7 @@
                         <div class="tag-filter-list">
                             <?php foreach ($tags as $tag): ?>
                                 <?php 
-                                    $isSelected = empty($selectedTags) || in_array($tag, $selectedTags, true);
+                                    $isSelected = !empty($selectedTags) && in_array($tag, $selectedTags, true);
                                 ?>
                                 <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>" style="background-color: #add8e6;">
                                     <input 
@@ -81,7 +81,7 @@
                         <div class="tag-filter-list">
                             <?php foreach ($emailTags as $tag): ?>
                                 <?php 
-                                    $isSelected = empty($selectedEmailTags) || in_array($tag, $selectedEmailTags, true);
+                                    $isSelected = !empty($selectedEmailTags) && in_array($tag, $selectedEmailTags, true);
                                 ?>
                                 <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>" style="background-color: #FFDBBB;">
                                     <input 
