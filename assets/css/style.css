@@ -32,15 +32,8 @@ body {
     height: 32px;
 }
 
-<<<<<<< Current (Your changes)
 .logo-icon-large {
     height: 32px;
-=======
-header h1 .logo-icon-large,
-.logo-icon.logo-icon-large {
-    height: 32px;
-    width: auto;
->>>>>>> Incoming (Background Agent changes)
 }
 
 /* Navigation */
