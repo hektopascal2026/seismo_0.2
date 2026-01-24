@@ -331,9 +331,10 @@ switch ($action) {
                         if (!empty($taggedEmails)) {
                             $tagPlaceholders = implode(',', array_fill(0, count($taggedEmails), '?'));
                             if ($isCronjobTable) {
-                                $whereClause .= ($whereClause !== "1=1" ? " AND " : "") . "from_addr IN ($tagPlaceholders)";
+                                // Always append with AND to avoid malformed "1=1from_addr" when no previous conditions
+                                $whereClause .= " AND from_addr IN ($tagPlaceholders)";
                             } else {
-                                $whereClause .= ($whereClause !== "1=1" ? " AND " : "") . "from_email IN ($tagPlaceholders)";
+                                $whereClause .= " AND from_email IN ($tagPlaceholders)";
                             }
                             $params = array_merge($params, $taggedEmails);
                         } else {
@@ -959,9 +960,10 @@ function getEmailsForIndex($pdo, $limit = 30, $selectedEmailTags = []) {
             if (!empty($selectedEmailTags) && !empty($taggedEmails)) {
                 $tagPlaceholders = implode(',', array_fill(0, count($taggedEmails), '?'));
                 if ($isCronjobTable) {
-                    $whereClause .= ($whereClause !== "1=1" ? " AND " : "") . "from_addr IN ($tagPlaceholders)";
+                    // Always append with AND to avoid malformed "1=1from_addr" when no previous conditions
+                    $whereClause .= " AND from_addr IN ($tagPlaceholders)";
                 } else {
-                    $whereClause .= ($whereClause !== "1=1" ? " AND " : "") . "from_email IN ($tagPlaceholders)";
+                    $whereClause .= " AND from_email IN ($tagPlaceholders)";
                 }
                 $params = array_merge($params, $taggedEmails);
             } elseif (!empty($selectedEmailTags) && empty($taggedEmails)) {
