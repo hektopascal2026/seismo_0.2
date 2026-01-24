@@ -250,8 +250,8 @@
         <!-- Navigation Section -->
         <section class="styleguide-section">
             <h2>Navigation</h2>
-            <p>The main navigation uses tabs with a 2px black border. Active state has black background with white text.</p>
-            
+            <p>The main navigation uses tabs with a 2px black border. Adjacent tabs overlap by 2px to create seamless appearance. Active state has black background with white text.</p>
+
             <div class="component-demo">
                 <nav class="main-nav">
                     <a href="#" class="nav-link active">Active Link</a>

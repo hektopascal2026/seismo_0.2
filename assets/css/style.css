@@ -28,6 +28,10 @@ body {
     margin-right: 0.3em;
 }
 
+.logo-icon-nav {
+    height: 1.2em;
+}
+
 .logo-icon-large {
     height: 1em;
 }
@@ -59,6 +63,7 @@ body {
 }
 
 .nav-link + .nav-link {
+    /* Overlap adjacent tabs by 2px to create seamless border appearance */
     margin-left: -2px;
 }
 
