@@ -45,8 +45,6 @@
             </form>
         </div>
 
-        <hr class="section-divider">
-
         <?php if (!empty($categories) || isset($selectedCategory)): ?>
         <div class="category-filter-section">
             <div class="category-filter">
