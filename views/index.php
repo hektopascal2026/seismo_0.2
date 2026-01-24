@@ -30,7 +30,7 @@
                 </svg>
                 Seismo
             </h1>
-            <p class="subtitle">ein Prototyp von hektopascal.org | v0.2</p>
+            <p class="subtitle">ein Prototyp von hektopascal.org | v0.2.2</p>
         </header>
 
         <?php if (isset($_SESSION['success'])): ?>
