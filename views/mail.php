@@ -42,7 +42,7 @@
             <div class="category-filter">
                 <a href="?action=mail" class="category-btn <?= !$selectedEmailTag ? 'active' : '' ?>">All Emails</a>
                 <?php foreach ($emailTags as $tag): ?>
-                    <a href="?action=mail&email_tag=<?= urlencode($tag) ?>" class="category-btn <?= $selectedEmailTag === $tag ? 'active' : '' ?>" style="background-color: #FFDBBB;">
+                    <a href="?action=mail&email_tag=<?= urlencode($tag) ?>" class="category-btn <?= $selectedEmailTag === $tag ? 'active' : '' ?>"<?= $selectedEmailTag === $tag ? ' style="background-color: #FFDBBB;"' : '' ?>>
                         <?= htmlspecialchars($tag) ?>
                     </a>
                 <?php endforeach; ?>

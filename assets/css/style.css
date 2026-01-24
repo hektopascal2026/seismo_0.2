@@ -297,8 +297,8 @@ header h2 {
 }
 
 .category-btn.active {
-    background-color: #000000;
-    color: #ffffff;
+    /* Keep the colored background from inline style, ensure black text */
+    color: #000000 !important;
 }
 
 /* Tag Filter on Index Page */
@@ -350,8 +350,8 @@ header h2 {
 }
 
 .tag-filter-pill-active {
-    background-color: #000000;
-    color: #ffffff;
+    /* Keep the colored background from inline style, ensure black text */
+    color: #000000 !important;
 }
 
 @media (max-width: 768px) {

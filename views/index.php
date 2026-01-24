@@ -60,7 +60,7 @@
                                 <?php 
                                     $isSelected = !empty($selectedTags) && in_array($tag, $selectedTags, true);
                                 ?>
-                                <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>" style="background-color: #add8e6;">
+                                <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>"<?= $isSelected ? ' style="background-color: #add8e6;"' : '' ?>>
                                     <input 
                                         type="checkbox" 
                                         name="tags[]" 
@@ -83,7 +83,7 @@
                                 <?php 
                                     $isSelected = !empty($selectedEmailTags) && in_array($tag, $selectedEmailTags, true);
                                 ?>
-                                <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>" style="background-color: #FFDBBB;">
+                                <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>"<?= $isSelected ? ' style="background-color: #FFDBBB;"' : '' ?>>
                                     <input 
                                         type="checkbox" 
                                         name="email_tags[]" 
