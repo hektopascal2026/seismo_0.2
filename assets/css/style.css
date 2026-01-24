@@ -53,9 +53,11 @@ body {
     font-size: 16px;
     font-weight: 600;
     text-decoration: none;
-    display: inline-flex;
+    display: flex;
+    flex-direction: row;
     align-items: center;
-    gap: 0.3em;
+    justify-content: flex-start;
+    gap: 12px;
     transition: all 0.2s;
     font-family: inherit;
     position: relative;
@@ -63,7 +65,7 @@ body {
 }
 
 .nav-link + .nav-link {
-    /* Overlap adjacent tabs by 2px to create seamless border appearance */
+    /* Overlap adjacent tabs by 2px to ensure shared borders are only 2px thick */
     margin-left: -2px;
 }
 
@@ -629,6 +631,7 @@ h3 {
 
     .nav-link + .nav-link {
         margin-left: 0;
+        margin-top: -2px;
     }
 
     header h1 {
