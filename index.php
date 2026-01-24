@@ -501,6 +501,10 @@ switch ($action) {
         $tagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' ORDER BY category");
         $allTags = $tagsStmt->fetchAll(PDO::FETCH_COLUMN);
         
+        // Get all unique email tags (excluding unclassified)
+        $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' ORDER BY tag");
+        $allEmailTags = $emailTagsStmt->fetchAll(PDO::FETCH_COLUMN);
+        
         // Get all unique senders and their tags for Mail section
         $senderTags = [];
         try {
@@ -622,6 +626,10 @@ switch ($action) {
         
     case 'rename_tag':
         handleRenameTag($pdo);
+        break;
+        
+    case 'rename_email_tag':
+        handleRenameEmailTag($pdo);
         break;
         
     case 'api_email_tags':
@@ -1264,6 +1272,31 @@ function handleRenameTag($pdo) {
     
     // Update all feeds with the old tag to the new tag
     $stmt = $pdo->prepare("UPDATE feeds SET category = ? WHERE category = ?");
+    $stmt->execute([$newTag, $oldTag]);
+    
+    $affectedRows = $stmt->rowCount();
+    
+    echo json_encode(['success' => true, 'affected' => $affectedRows]);
+}
+
+function handleRenameEmailTag($pdo) {
+    header('Content-Type: application/json');
+    
+    $oldTag = trim($_POST['old_tag'] ?? '');
+    $newTag = trim($_POST['new_tag'] ?? '');
+    
+    if (empty($oldTag) || empty($newTag)) {
+        echo json_encode(['success' => false, 'error' => 'Both old and new tag names are required']);
+        return;
+    }
+    
+    if ($oldTag === $newTag) {
+        echo json_encode(['success' => false, 'error' => 'New tag name must be different from old tag name']);
+        return;
+    }
+    
+    // Update all sender_tags with the old tag to the new tag
+    $stmt = $pdo->prepare("UPDATE sender_tags SET tag = ? WHERE tag = ?");
     $stmt->execute([$newTag, $oldTag]);
     
     $affectedRows = $stmt->rowCount();

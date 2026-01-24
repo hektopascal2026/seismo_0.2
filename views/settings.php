@@ -176,8 +176,6 @@
                 </div>
             <?php endif; ?>
             
-            <p>Manage your RSS feeds. Deactivate or delete feeds you no longer need.</p>
-            
             <?php if (empty($allFeeds)): ?>
                 <div class="empty-state">
                     <p>No feeds added yet.</p>
@@ -229,7 +227,28 @@
         <!-- Mail Section -->
         <section class="settings-section">
             <h2>Mail</h2>
-            <p>Manage tags for email senders. Edit tags to organize your emails.</p>
+            
+            <!-- All Email Tags Section -->
+            <?php if (!empty($allEmailTags)): ?>
+                <div style="margin-bottom: 30px; padding: 20px; background-color: #ffffff;">
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #000000;">All Tags</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <?php foreach ($allEmailTags as $tag): ?>
+                            <div class="feed-tag-input-wrapper" style="display: inline-flex;">
+                                <input 
+                                    type="text" 
+                                    class="feed-tag-input all-email-tag-input" 
+                                    value="<?= htmlspecialchars($tag) ?>" 
+                                    data-original-tag="<?= htmlspecialchars($tag) ?>"
+                                    data-tag-name="<?= htmlspecialchars($tag, ENT_QUOTES) ?>"
+                                    style="width: auto; min-width: 100px; padding: 6px 12px;"
+                                >
+                                <span class="feed-tag-indicator"></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
             
             <?php if (empty($senderTags)): ?>
                 <div class="empty-state">
@@ -285,6 +304,7 @@
         // Feed tag management (same as feeds.php)
         (function() {
             let allTags = [];
+            let allEmailTags = [];
             let currentSuggestions = [];
             let activeInput = null;
             let suggestionList = null;
@@ -296,6 +316,14 @@
                     allTags = tags;
                 })
                 .catch(err => console.error('Error loading tags:', err));
+            
+            // Load all email tags on page load
+            fetch('?action=api_email_tags')
+                .then(response => response.json())
+                .then(tags => {
+                    allEmailTags = tags;
+                })
+                .catch(err => console.error('Error loading email tags:', err));
             
             // Create suggestion dropdown
             function createSuggestionList() {
@@ -339,26 +367,28 @@
             }
             
             // Filter tags based on input
-            function filterTags(query) {
+            function filterTags(query, useEmailTags = false) {
+                const tagsToSearch = useEmailTags ? allEmailTags : allTags;
                 if (!query || query === 'unsortiert') {
                     return [];
                 }
                 const lowerQuery = query.toLowerCase();
-                return allTags.filter(tag => 
+                return tagsToSearch.filter(tag => 
                     tag.toLowerCase().includes(lowerQuery) && tag !== query
                 ).slice(0, 5);
             }
             
             // Check if tag is new
-            function isNewTag(tag) {
-                return tag && tag !== 'unsortiert' && !allTags.includes(tag);
+            function isNewTag(tag, useEmailTags = false) {
+                const tagsToSearch = useEmailTags ? allEmailTags : allTags;
+                return tag && tag !== 'unsortiert' && !tagsToSearch.includes(tag);
             }
             
             // Update indicator
-            function updateIndicator(input, value) {
+            function updateIndicator(input, value, useEmailTags = false) {
                 const indicator = input.parentElement.querySelector('.feed-tag-indicator');
                 if (indicator) {
-                    if (isNewTag(value)) {
+                    if (isNewTag(value, useEmailTags)) {
                         indicator.textContent = 'new';
                         indicator.className = 'feed-tag-indicator feed-tag-new';
                     } else {
@@ -368,24 +398,26 @@
                 }
             }
             
-            // Handle feed tag inputs (exclude all-tag-input which has its own handler)
-            document.querySelectorAll('.feed-tag-input:not(.all-tag-input)').forEach(input => {
+            // Handle feed tag inputs (exclude all-tag-input and all-email-tag-input which have their own handlers)
+            document.querySelectorAll('.feed-tag-input:not(.all-tag-input):not(.all-email-tag-input)').forEach(input => {
                 input.addEventListener('focus', function() {
                     activeInput = this;
                     const value = this.value.trim();
+                    const useEmailTags = this.classList.contains('all-email-tag-input');
                     if (value && value !== 'unsortiert') {
-                        const suggestions = filterTags(value);
+                        const suggestions = filterTags(value, useEmailTags);
                         showSuggestions(this, suggestions);
                     }
-                    updateIndicator(this, value);
+                    updateIndicator(this, value, useEmailTags);
                 });
                 
                 input.addEventListener('input', function() {
                     const value = this.value.trim();
-                    updateIndicator(this, value);
+                    const useEmailTags = this.classList.contains('all-email-tag-input');
+                    updateIndicator(this, value, useEmailTags);
                     
                     if (value && value !== 'unsortiert') {
-                        const suggestions = filterTags(value);
+                        const suggestions = filterTags(value, useEmailTags);
                         showSuggestions(this, suggestions);
                     } else {
                         hideSuggestions();
@@ -464,24 +496,26 @@
             });
         })();
         
-        // Handle "All Tags" editable inputs
-        document.querySelectorAll('.all-tag-input').forEach(input => {
+        // Handle "All Tags" editable inputs (both RSS and Email tags)
+        document.querySelectorAll('.all-tag-input, .all-email-tag-input').forEach(input => {
             input.addEventListener('focus', function() {
                 activeInput = this;
                 const value = this.value.trim();
+                const useEmailTags = this.classList.contains('all-email-tag-input');
                 if (value && value !== 'unsortiert') {
-                    const suggestions = filterTags(value);
+                    const suggestions = filterTags(value, useEmailTags);
                     showSuggestions(this, suggestions);
                 }
-                updateIndicator(this, value);
+                updateIndicator(this, value, useEmailTags);
             });
             
             input.addEventListener('input', function() {
                 const value = this.value.trim();
-                updateIndicator(this, value);
+                const useEmailTags = this.classList.contains('all-email-tag-input');
+                updateIndicator(this, value, useEmailTags);
                 
                 if (value && value !== 'unsortiert') {
-                    const suggestions = filterTags(value);
+                    const suggestions = filterTags(value, useEmailTags);
                     showSuggestions(this, suggestions);
                 } else {
                     hideSuggestions();
@@ -501,7 +535,8 @@
                     // Validation: cannot be empty
                     if (!value || value === '') {
                         this.value = this.dataset.originalTag;
-                        updateIndicator(this, this.value);
+                        const useEmailTags = this.classList.contains('all-email-tag-input');
+                        updateIndicator(this, this.value, useEmailTags);
                         hideSuggestions();
                         return;
                     }
@@ -513,6 +548,11 @@
                         return;
                     }
                     
+                    // Determine if this is an email tag or RSS tag
+                    const isEmailTag = this.classList.contains('all-email-tag-input');
+                    const action = isEmailTag ? 'rename_email_tag' : 'rename_tag';
+                    const apiAction = isEmailTag ? 'api_email_tags' : 'api_tags';
+                    
                     // Rename tag
                     const formData = new FormData();
                     formData.append('old_tag', oldTag);
@@ -520,7 +560,7 @@
                     
                     this.classList.add('feed-tag-saving');
                     
-                    fetch('?action=rename_tag', {
+                    fetch('?action=' + action, {
                         method: 'POST',
                         body: formData
                     })
@@ -541,18 +581,23 @@
                             hideSuggestions();
                             
                             // Reload tags list
-                            return fetch('?action=api_tags');
+                            return fetch('?action=' + apiAction);
                         } else {
                             this.classList.remove('feed-tag-saving');
                             alert('Error: ' + (data.error || 'Failed to rename tag'));
                             this.value = this.dataset.originalTag;
-                            updateIndicator(this, this.value);
+                            const useEmailTags = this.classList.contains('all-email-tag-input');
+                            updateIndicator(this, this.value, useEmailTags);
                         }
                     })
                     .then(response => response ? response.json() : null)
                     .then(tags => {
                         if (tags) {
-                            allTags = tags;
+                            if (isEmailTag) {
+                                allEmailTags = tags;
+                            } else {
+                                allTags = tags;
+                            }
                         }
                     })
                     .catch(err => {
@@ -560,11 +605,13 @@
                         this.classList.remove('feed-tag-saving');
                         alert('Error renaming tag');
                         this.value = this.dataset.originalTag;
-                        updateIndicator(this, this.value);
+                        const useEmailTags = this.classList.contains('all-email-tag-input');
+                        updateIndicator(this, this.value, useEmailTags);
                     });
                 } else if (e.key === 'Escape') {
                     this.value = this.dataset.originalTag;
-                    updateIndicator(this, this.value);
+                    const useEmailTags = this.classList.contains('all-email-tag-input');
+                    updateIndicator(this, this.value, useEmailTags);
                     hideSuggestions();
                     this.blur();
                 }
