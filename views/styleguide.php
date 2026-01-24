@@ -233,7 +233,7 @@
         <section class="styleguide-section">
             <h2>Buttons</h2>
             <p>Buttons use a consistent 2px border and have hover states that invert colors.</p>
-            
+
             <div class="component-demo">
                 <h3>Button Variants</h3>
                 <div style="display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0;">
@@ -243,7 +243,7 @@
                     <a href="#" class="btn btn-warning">Warning Button</a>
                     <a href="#" class="btn btn-success">Success Button</a>
                 </div>
-                <p style="margin-top: 20px;"><strong>Danger Button Border:</strong> #ffb09c</p>
+                <p style="margin-top: 20px;"><strong>Danger Button:</strong> #FF2C2C border, hover state with colored background and white text</p>
             </div>
         </section>
 
