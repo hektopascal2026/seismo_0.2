@@ -50,9 +50,15 @@
         <?php if (!empty($categories) || isset($selectedCategory)): ?>
         <div class="category-filter-section">
             <div class="category-filter">
-                <a href="?action=feeds" class="category-btn <?= !$selectedCategory ? 'active' : '' ?>">All Feeds</a>
+                <a href="?action=feeds"
+                   class="category-btn <?= !$selectedCategory ? 'active' : '' ?>"
+                   <?= !$selectedCategory ? 'style="background-color: #add8e6;"' : '' ?>>
+                    All Feeds
+                </a>
                 <?php foreach ($categories as $category): ?>
-                    <a href="?action=feeds&category=<?= urlencode($category) ?>" class="category-btn <?= $selectedCategory === $category ? 'active' : '' ?>"<?= $selectedCategory === $category ? ' style="background-color: #add8e6;"' : '' ?>>
+                    <a href="?action=feeds&category=<?= urlencode($category) ?>"
+                       class="category-btn <?= $selectedCategory === $category ? 'active' : '' ?>"
+                       <?= $selectedCategory === $category ? 'style="background-color: #add8e6;"' : '' ?>>
                         <?= htmlspecialchars($category) ?>
                     </a>
                 <?php endforeach; ?>

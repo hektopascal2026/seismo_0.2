@@ -320,22 +320,61 @@
         <!-- Tag Filters Section -->
         <section class="styleguide-section">
             <h2>Tag Filters</h2>
-            <p>Tag filters allow users to filter content by categories. Active tags have a black background.</p>
+            <p>Tag filters allow users to filter content by categories. Tags use consistent sizing (padding: 6px 12px, font-size: 13px, font-weight: 500) across all pages.</p>
+            
+            <h3>Active vs Inactive States</h3>
+            <p>Active tags have a colored background with black text. Inactive tags have a white background with black text.</p>
             
             <div class="component-demo">
+                <h4>RSS Tags (Light Blue: #add8e6)</h4>
                 <div class="tag-filter-list">
-                    <label class="tag-filter-pill tag-filter-pill-active">
+                    <label class="tag-filter-pill tag-filter-pill-active" style="background-color: #add8e6;">
                         <input type="checkbox" checked>
-                        <span>Active Tag</span>
+                        <span>Active RSS Tag</span>
                     </label>
                     <label class="tag-filter-pill">
                         <input type="checkbox">
-                        <span>Inactive Tag</span>
+                        <span>Inactive RSS Tag</span>
                     </label>
                     <label class="tag-filter-pill">
                         <input type="checkbox">
-                        <span>Another Tag</span>
+                        <span>Another RSS Tag</span>
                     </label>
+                </div>
+                
+                <h4 style="margin-top: 30px;">Email Tags (Light Orange: #FFDBBB)</h4>
+                <div class="tag-filter-list">
+                    <label class="tag-filter-pill tag-filter-pill-active" style="background-color: #FFDBBB;">
+                        <input type="checkbox" checked>
+                        <span>Active Email Tag</span>
+                    </label>
+                    <label class="tag-filter-pill">
+                        <input type="checkbox">
+                        <span>Inactive Email Tag</span>
+                    </label>
+                    <label class="tag-filter-pill">
+                        <input type="checkbox">
+                        <span>Another Email Tag</span>
+                    </label>
+                </div>
+            </div>
+            
+            <h3>Category Buttons</h3>
+            <p>Category buttons (used on feeds.php and mail.php) match the tag pill styling and use the same color scheme:</p>
+            
+            <div class="component-demo">
+                <h4>RSS Category Buttons</h4>
+                <div class="category-filter">
+                    <a href="#" class="category-btn active" style="background-color: #add8e6;">All Feeds</a>
+                    <a href="#" class="category-btn" style="background-color: #add8e6;">Category 1</a>
+                    <a href="#" class="category-btn">Category 2</a>
+                </div>
+                
+                <h4 style="margin-top: 30px;">Email Category Buttons</h4>
+                <div class="category-filter">
+                    <a href="#" class="category-btn active" style="background-color: #FFDBBB;">All Emails</a>
+                    <a href="#" class="category-btn" style="background-color: #FFDBBB;">Tag 1</a>
+                    <a href="#" class="category-btn">Tag 2</a>
                 </div>
             </div>
         </section>

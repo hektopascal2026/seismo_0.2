@@ -280,12 +280,13 @@ header h2 {
 }
 
 .category-btn {
-    padding: 8px 16px;
+    /* Match visual size with index tag pills */
+    padding: 6px 12px;
     border: 2px solid #000000;
     background-color: #ffffff;
     color: #000000;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
     text-decoration: none;
     display: inline-block;
     transition: all 0.2s;
