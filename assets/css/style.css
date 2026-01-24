@@ -356,22 +356,22 @@ header h2 {
     background-color: #f5f5f5;
 }
 
-.tag-filter-pill-active:hover {
+.tag-filter-pill.tag-filter-pill-active:hover {
     /* Keep colored background on hover, ensure black text */
     color: #000000 !important;
     /* Don't override the colored background from inline style */
 }
 
-.tag-filter-pill-active:hover span {
+.tag-filter-pill.tag-filter-pill-active:hover span {
     color: #000000 !important;
 }
 
-.tag-filter-pill-active {
+.tag-filter-pill.tag-filter-pill-active {
     /* Keep the colored background from inline style, ensure black text */
     color: #000000 !important;
 }
 
-.tag-filter-pill-active span {
+.tag-filter-pill.tag-filter-pill-active span {
     color: #000000 !important;
 }
 
