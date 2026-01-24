@@ -68,7 +68,7 @@ switch ($action) {
         if (!empty($searchQuery)) {
             $emails = $searchEmails;
         } else {
-            $emails = getEmailsForIndex($pdo, 30);
+            $emails = getEmailsForIndex($pdo, 30, $selectedEmailTags);
         }
         
         // Merge and sort by date
@@ -931,9 +931,11 @@ function getEmailsForIndex($pdo, $limit = 30, $selectedEmailTags = []) {
                 }
             }
             
-            // Build WHERE clause to exclude disabled senders
+            // Build WHERE clause to exclude disabled senders and filter by tags
             $whereClause = "1=1";
             $params = [];
+            
+            // Exclude disabled senders
             if (!empty($disabledEmails)) {
                 $placeholders = implode(',', array_fill(0, count($disabledEmails), '?'));
                 // Handle both from_email and from_addr columns
@@ -943,6 +945,20 @@ function getEmailsForIndex($pdo, $limit = 30, $selectedEmailTags = []) {
                     $whereClause = "from_email NOT IN ($placeholders)";
                 }
                 $params = $disabledEmails;
+            }
+            
+            // Filter by email tags if selected
+            if (!empty($selectedEmailTags) && !empty($taggedEmails)) {
+                $tagPlaceholders = implode(',', array_fill(0, count($taggedEmails), '?'));
+                if ($isCronjobTable) {
+                    $whereClause .= ($whereClause !== "1=1" ? " AND " : "") . "from_addr IN ($tagPlaceholders)";
+                } else {
+                    $whereClause .= ($whereClause !== "1=1" ? " AND " : "") . "from_email IN ($tagPlaceholders)";
+                }
+                $params = array_merge($params, $taggedEmails);
+            } elseif (!empty($selectedEmailTags) && empty($taggedEmails)) {
+                // No emails with selected tags, return empty
+                return [];
             }
             
             $sql = "SELECT $selectClause FROM `$tableName` WHERE $whereClause ORDER BY $orderBy LIMIT $limit";
