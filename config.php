@@ -167,11 +167,24 @@ function initDatabase() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         from_email VARCHAR(255) NOT NULL UNIQUE,
         tag VARCHAR(100) DEFAULT NULL,
+        disabled TINYINT(1) DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_from_email (from_email),
-        INDEX idx_tag (tag)
+        INDEX idx_tag (tag),
+        INDEX idx_disabled (disabled)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    
+    // Add disabled column if it doesn't exist (for existing installations)
+    try {
+        $pdo->exec("ALTER TABLE sender_tags ADD COLUMN disabled TINYINT(1) DEFAULT 0 AFTER tag");
+    } catch (PDOException $e) {
+        // Column might already exist, ignore error
+        if (strpos($e->getMessage(), 'Duplicate column name') === false) {
+            // Re-throw if it's a different error
+            throw $e;
+        }
+    }
 }
 
 /**

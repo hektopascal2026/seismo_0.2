@@ -37,6 +37,19 @@
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
+        <?php if (!empty($emailTags) || isset($selectedEmailTag)): ?>
+        <div class="category-filter-section">
+            <div class="category-filter">
+                <a href="?action=mail" class="category-btn <?= !$selectedEmailTag ? 'active' : '' ?>">All Emails</a>
+                <?php foreach ($emailTags as $tag): ?>
+                    <a href="?action=mail&email_tag=<?= urlencode($tag) ?>" class="category-btn <?= $selectedEmailTag === $tag ? 'active' : '' ?>" style="background-color: #FFDBBB;">
+                        <?= htmlspecialchars($tag) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="latest-entries-section">
             <h2 class="section-title">
                 <?php if (!empty($lastMailRefreshDate)): ?>

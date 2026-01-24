@@ -52,7 +52,7 @@
             <div class="category-filter">
                 <a href="?action=feeds" class="category-btn <?= !$selectedCategory ? 'active' : '' ?>">All Feeds</a>
                 <?php foreach ($categories as $category): ?>
-                    <a href="?action=feeds&category=<?= urlencode($category) ?>" class="category-btn <?= $selectedCategory === $category ? 'active' : '' ?>">
+                    <a href="?action=feeds&category=<?= urlencode($category) ?>" class="category-btn <?= $selectedCategory === $category ? 'active' : '' ?>" style="background-color: #add8e6;">
                         <?= htmlspecialchars($category) ?>
                     </a>
                 <?php endforeach; ?>

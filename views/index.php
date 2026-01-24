@@ -48,21 +48,45 @@
             <form method="GET" action="?action=index" class="search-form">
                 <input type="search" name="q" placeholder="Search..." class="search-input" value="<?= htmlspecialchars($searchQuery ?? '') ?>">
                 <button type="submit" class="btn btn-primary">Search</button>
-                <?php if (!empty($searchQuery) || !empty($selectedTags)): ?>
+                <?php if (!empty($searchQuery) || !empty($selectedTags) || !empty($selectedEmailTags ?? []): ?>
                     <a href="?action=index" class="btn btn-secondary">Clear</a>
                 <?php endif; ?>
 
                 <?php if (!empty($tags)): ?>
                     <div class="tag-filter-section">
+                        <div class="tag-filter-label" style="margin-bottom: 8px;">RSS Tags:</div>
                         <div class="tag-filter-list">
                             <?php foreach ($tags as $tag): ?>
                                 <?php 
                                     $isSelected = empty($selectedTags) || in_array($tag, $selectedTags, true);
                                 ?>
-                                <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>">
+                                <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>" style="background-color: #add8e6;">
                                     <input 
                                         type="checkbox" 
                                         name="tags[]" 
+                                        value="<?= htmlspecialchars($tag) ?>" 
+                                        <?= $isSelected ? 'checked' : '' ?>
+                                        onchange="this.form.submit()"
+                                    >
+                                    <span><?= htmlspecialchars($tag) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if (!empty($emailTags)): ?>
+                    <div class="tag-filter-section" style="margin-top: 16px;">
+                        <div class="tag-filter-label" style="margin-bottom: 8px;">Email Tags:</div>
+                        <div class="tag-filter-list">
+                            <?php foreach ($emailTags as $tag): ?>
+                                <?php 
+                                    $isSelected = empty($selectedEmailTags) || in_array($tag, $selectedEmailTags, true);
+                                ?>
+                                <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>" style="background-color: #FFDBBB;">
+                                    <input 
+                                        type="checkbox" 
+                                        name="email_tags[]" 
                                         value="<?= htmlspecialchars($tag) ?>" 
                                         <?= $isSelected ? 'checked' : '' ?>
                                         onchange="this.form.submit()"

@@ -146,6 +146,14 @@
         <section class="settings-section">
             <h2>RSS</h2>
             
+            <!-- Add Feed Section -->
+            <div class="add-feed-section" style="margin-bottom: 30px;">
+                <form method="POST" action="?action=add_feed" class="add-feed-form">
+                    <input type="url" name="url" placeholder="Enter RSS feed URL (e.g., https://example.com/feed.xml)" required class="feed-input">
+                    <button type="submit" class="btn btn-primary">Add Feed</button>
+                </form>
+            </div>
+            
             <!-- All Tags Section -->
             <?php if (!empty($allTags)): ?>
                 <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #000000; background-color: #ffffff;">
@@ -235,20 +243,34 @@
                                     <?= !empty($sender['name']) ? htmlspecialchars($sender['name']) : 'Unknown' ?>
                                 </div>
                                 <div class="settings-item-meta"><?= htmlspecialchars($sender['email']) ?></div>
-                                <?php if ($sender['tag']): ?>
-                                    <span class="settings-item-tag"><?= htmlspecialchars($sender['tag']) ?></span>
-                                <?php endif; ?>
                             </div>
-                            <div class="settings-item-actions">
-                                <div class="tag-input-wrapper">
-                                    <input 
-                                        type="text" 
-                                        class="tag-input" 
-                                        value="<?= htmlspecialchars($sender['tag'] ?? '') ?>" 
-                                        placeholder="Enter tag..."
-                                        data-sender-email="<?= htmlspecialchars($sender['email']) ?>"
-                                        data-original-tag="<?= htmlspecialchars($sender['tag'] ?? '') ?>"
-                                    >
+                            <div class="settings-item-actions" style="flex-direction: column; align-items: flex-end; gap: 10px;">
+                                <div style="display: flex; gap: 10px;">
+                                    <a href="?action=toggle_sender&email=<?= urlencode($sender['email']) ?>&from=settings" 
+                                       class="btn <?= $sender['disabled'] ? 'btn-success' : 'btn-warning' ?>" 
+                                       style="font-size: 14px; padding: 8px 16px;">
+                                        <?= $sender['disabled'] ? 'Enable' : 'Disable' ?>
+                                    </a>
+                                    <a href="?action=delete_sender&email=<?= urlencode($sender['email']) ?>&from=settings" 
+                                       class="btn btn-danger" 
+                                       onclick="return confirm('Are you sure you want to remove this sender from settings? Emails will be tagged as unclassified.');"
+                                       style="font-size: 14px; padding: 8px 16px;">
+                                        Delete
+                                    </a>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <label style="font-weight: 600; font-size: 14px;">Tag:</label>
+                                    <div class="tag-input-wrapper">
+                                        <input 
+                                            type="text" 
+                                            class="tag-input" 
+                                            value="<?= htmlspecialchars($sender['tag'] ?? '') ?>" 
+                                            placeholder="Enter tag..."
+                                            data-sender-email="<?= htmlspecialchars($sender['email']) ?>"
+                                            data-original-tag="<?= htmlspecialchars($sender['tag'] ?? '') ?>"
+                                            style="width: 150px;"
+                                        >
+                                    </div>
                                 </div>
                             </div>
                         </div>
