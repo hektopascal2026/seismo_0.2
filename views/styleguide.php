@@ -186,6 +186,17 @@
                     <div class="color-swatch-info">#F5F5F5<br>Light Gray</div>
                 </div>
             </div>
+            
+            <h3>Tag Colors</h3>
+            <p>Tags use specific background colors to distinguish between different types:</p>
+            <div>
+                <div class="color-swatch" style="background-color: #add8e6;">
+                    <div class="color-swatch-info">#add8e6<br>RSS Tags</div>
+                </div>
+                <div class="color-swatch" style="background-color: #FFDBBB;">
+                    <div class="color-swatch-info">#FFDBBB<br>Email Tags</div>
+                </div>
+            </div>
         </section>
 
         <!-- Typography Section -->
@@ -221,7 +232,7 @@
         <!-- Buttons Section -->
         <section class="styleguide-section">
             <h2>Buttons</h2>
-            <p>Buttons use a consistent 2px black border and have hover states that invert colors.</p>
+            <p>Buttons use a consistent 2px border and have hover states that invert colors.</p>
             
             <div class="component-demo">
                 <h3>Button Variants</h3>
@@ -232,6 +243,7 @@
                     <a href="#" class="btn btn-warning">Warning Button</a>
                     <a href="#" class="btn btn-success">Success Button</a>
                 </div>
+                <p style="margin-top: 20px;"><strong>Danger Button Border:</strong> #ffb09c</p>
             </div>
         </section>
 

@@ -156,19 +156,20 @@
             
             <!-- All Tags Section -->
             <?php if (!empty($allTags)): ?>
-                <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #000000; background-color: #ffffff;">
+                <div style="margin-bottom: 30px; padding: 20px; background-color: #ffffff;">
                     <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #000000;">All Tags</h3>
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                         <?php foreach ($allTags as $tag): ?>
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #000000; background-color: #ffffff;">
-                                <span style="font-weight: 600;"><?= htmlspecialchars($tag) ?></span>
-                                <button 
-                                    class="btn btn-danger" 
-                                    style="font-size: 12px; padding: 4px 8px;"
-                                    onclick="renameTag('<?= htmlspecialchars($tag, ENT_QUOTES) ?>', this)"
-                                    title="Rename tag">
-                                    Rename
-                                </button>
+                            <div class="feed-tag-input-wrapper" style="display: inline-flex;">
+                                <input 
+                                    type="text" 
+                                    class="feed-tag-input all-tag-input" 
+                                    value="<?= htmlspecialchars($tag) ?>" 
+                                    data-original-tag="<?= htmlspecialchars($tag) ?>"
+                                    data-tag-name="<?= htmlspecialchars($tag, ENT_QUOTES) ?>"
+                                    style="width: auto; min-width: 100px; padding: 6px 12px;"
+                                >
+                                <span class="feed-tag-indicator"></span>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -367,8 +368,8 @@
                 }
             }
             
-            // Handle feed tag inputs
-            document.querySelectorAll('.feed-tag-input').forEach(input => {
+            // Handle feed tag inputs (exclude all-tag-input which has its own handler)
+            document.querySelectorAll('.feed-tag-input:not(.all-tag-input)').forEach(input => {
                 input.addEventListener('focus', function() {
                     activeInput = this;
                     const value = this.value.trim();
@@ -463,39 +464,112 @@
             });
         })();
         
-        // Rename tag function
-        function renameTag(oldTag, button) {
-            const newTag = prompt('Enter new tag name:', oldTag);
-            if (newTag && newTag.trim() !== '' && newTag.trim() !== oldTag) {
-                const formData = new FormData();
-                formData.append('old_tag', oldTag);
-                formData.append('new_tag', newTag.trim());
+        // Handle "All Tags" editable inputs
+        document.querySelectorAll('.all-tag-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                activeInput = this;
+                const value = this.value.trim();
+                if (value && value !== 'unsortiert') {
+                    const suggestions = filterTags(value);
+                    showSuggestions(this, suggestions);
+                }
+                updateIndicator(this, value);
+            });
+            
+            input.addEventListener('input', function() {
+                const value = this.value.trim();
+                updateIndicator(this, value);
                 
-                button.disabled = true;
-                button.textContent = 'Renaming...';
-                
-                fetch('?action=rename_tag', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error: ' + (data.error || 'Failed to rename tag'));
-                        button.disabled = false;
-                        button.textContent = 'Rename';
+                if (value && value !== 'unsortiert') {
+                    const suggestions = filterTags(value);
+                    showSuggestions(this, suggestions);
+                } else {
+                    hideSuggestions();
+                }
+            });
+            
+            input.addEventListener('blur', function() {
+                setTimeout(() => hideSuggestions(), 200);
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = this.value.trim();
+                    const oldTag = this.dataset.tagName;
+                    
+                    // Validation: cannot be empty
+                    if (!value || value === '') {
+                        this.value = this.dataset.originalTag;
+                        updateIndicator(this, this.value);
+                        hideSuggestions();
+                        return;
                     }
-                })
-                .catch(err => {
-                    console.error('Error renaming tag:', err);
-                    alert('Error renaming tag');
-                    button.disabled = false;
-                    button.textContent = 'Rename';
-                });
-            }
-        }
+                    
+                    // If unchanged, do nothing
+                    if (value === oldTag) {
+                        this.blur();
+                        hideSuggestions();
+                        return;
+                    }
+                    
+                    // Rename tag
+                    const formData = new FormData();
+                    formData.append('old_tag', oldTag);
+                    formData.append('new_tag', value);
+                    
+                    this.classList.add('feed-tag-saving');
+                    
+                    fetch('?action=rename_tag', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.dataset.originalTag = value;
+                            this.dataset.tagName = value;
+                            
+                            this.classList.remove('feed-tag-saving');
+                            this.classList.add('feed-tag-saved');
+                            
+                            setTimeout(() => {
+                                this.classList.remove('feed-tag-saved');
+                            }, 2000);
+                            
+                            this.blur();
+                            hideSuggestions();
+                            
+                            // Reload tags list
+                            return fetch('?action=api_tags');
+                        } else {
+                            this.classList.remove('feed-tag-saving');
+                            alert('Error: ' + (data.error || 'Failed to rename tag'));
+                            this.value = this.dataset.originalTag;
+                            updateIndicator(this, this.value);
+                        }
+                    })
+                    .then(response => response ? response.json() : null)
+                    .then(tags => {
+                        if (tags) {
+                            allTags = tags;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error renaming tag:', err);
+                        this.classList.remove('feed-tag-saving');
+                        alert('Error renaming tag');
+                        this.value = this.dataset.originalTag;
+                        updateIndicator(this, this.value);
+                    });
+                } else if (e.key === 'Escape') {
+                    this.value = this.dataset.originalTag;
+                    updateIndicator(this, this.value);
+                    hideSuggestions();
+                    this.blur();
+                }
+            });
+        });
         
         // Handle sender tag updates
         document.querySelectorAll('.tag-input:not(.feed-tag-input)').forEach(function(input) {
