@@ -117,6 +117,54 @@ switch ($action) {
         include 'views/index.php';
         break;
 
+        case 'ai_view_unified':
+    // 1. Fetch RSS Items
+    $latestItemsStmt = $pdo->query("
+        SELECT fi.*, f.title as feed_title 
+        FROM feed_items fi
+        JOIN feeds f ON fi.feed_id = f.id
+        WHERE f.disabled = 0
+        ORDER BY fi.published_date DESC
+        LIMIT 50
+    ");
+    $latestItems = $latestItemsStmt->fetchAll();
+
+    // 2. Fetch Emails
+    $emails = getEmailsForIndex($pdo, 50, []);
+
+    // 3. Merge into unified list
+    $allItems = [];
+    foreach ($latestItems as $item) {
+        $date = $item['published_date'] ?? $item['cached_at'] ?? 0;
+        $allItems[] = [
+            'source'  => $item['feed_title'],
+            'date'    => strtotime($date),
+            'title'   => $item['title'],
+            'content' => strip_tags($item['content'] ?: $item['description']),
+            'link'    => $item['link']
+        ];
+    }
+
+    foreach ($emails as $email) {
+        $date = $email['date_received'] ?? $email['date_utc'] ?? $email['created_at'] ?? 0;
+        $from = ($email['from_name'] ?: $email['from_email']) ?: 'Unknown';
+        $allItems[] = [
+            'source'  => "EMAIL: $from",
+            'date'    => strtotime($date),
+            'title'   => $email['subject'] ?: '(No Subject)',
+            'content' => strip_tags($email['text_body'] ?: $email['html_body'] ?: ''),
+            'link'    => '#'
+        ];
+    }
+
+    // 4. Sort chronologically (Newest First)
+    usort($allItems, function($a, $b) {
+        return $b['date'] - $a['date'];
+    });
+
+    include 'views/ai_view_unified.php';
+    break;
+
     case 'ai_view':
         // Find the right table name (matches your system's logic)
         $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
