@@ -116,6 +116,23 @@ switch ($action) {
         
         include 'views/index.php';
         break;
+
+    case 'ai_view':
+        // Find the right table name (matches your system's logic)
+        $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        $tableName = 'fetched_emails'; // default
+        foreach ($allTables as $table) {
+            if (strtolower($table) === 'fetched_emails') { $tableName = $table; break; }
+            if (strtolower($table) === 'emails') { $tableName = $table; }
+        }
+
+        // Fetch emails
+        $stmt = $pdo->query("SELECT * FROM `$tableName` ORDER BY id DESC LIMIT 100");
+        $emails = $stmt->fetchAll();
+
+        // Load the specialized AI view
+        include 'views/ai_view.php';
+        break;
         
     case 'feeds':
         // Show feeds management page
