@@ -278,7 +278,7 @@
                     <div class="entry-content entry-preview">
                         This is an example of card content. Cards can contain various types of information and are used throughout the application for displaying feed items...
                     </div>
-                    <div class="entry-full-content">This is the full content of the card. It contains much more text than the preview. Cards can contain various types of information and are used throughout the application for displaying feed items, emails, and other content. When expanded, the full text is shown in a pre-wrapped format preserving line breaks.</div>
+                    <div class="entry-full-content" style="display:none">This is the full content of the card. It contains much more text than the preview. Cards can contain various types of information and are used throughout the application for displaying feed items, emails, and other content. When expanded, the full text is shown in a pre-wrapped format preserving line breaks.</div>
                     <div class="entry-actions">
                         <a href="#" class="entry-link">Read more →</a>
                         <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
@@ -434,47 +434,48 @@
 
     <script>
     (function() {
+        function collapseEntry(card, btn) {
+            var preview = card.querySelector('.entry-preview');
+            var full = card.querySelector('.entry-full-content');
+            if (!preview || !full) return;
+            full.style.display = 'none';
+            preview.style.display = '';
+            if (btn) btn.textContent = '\u25BC expand';
+        }
+
+        function expandEntry(card, btn) {
+            var preview = card.querySelector('.entry-preview');
+            var full = card.querySelector('.entry-full-content');
+            if (!preview || !full) return;
+            preview.style.display = 'none';
+            full.style.display = 'block';
+            if (btn) btn.textContent = '\u25B2 collapse';
+        }
+
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.entry-expand-btn');
             if (!btn) return;
             var card = btn.closest('.entry-card');
             if (!card) return;
-            var preview = card.querySelector('.entry-preview');
             var full = card.querySelector('.entry-full-content');
-            if (!preview || !full) return;
-            
-            var isExpanded = full.classList.contains('expanded');
-            if (isExpanded) {
-                full.classList.remove('expanded');
-                preview.style.display = '';
-                btn.textContent = '\u25BC expand';
+            if (!full) return;
+            if (full.style.display === 'block') {
+                collapseEntry(card, btn);
             } else {
-                full.classList.add('expanded');
-                preview.style.display = 'none';
-                btn.textContent = '\u25B2 collapse';
+                expandEntry(card, btn);
             }
         });
 
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.entry-expand-all-btn');
             if (!btn) return;
-            
             var isExpanded = btn.dataset.expanded === 'true';
-            var cards = document.querySelectorAll('.entry-card');
-            cards.forEach(function(card) {
-                var preview = card.querySelector('.entry-preview');
-                var full = card.querySelector('.entry-full-content');
+            document.querySelectorAll('.entry-card').forEach(function(card) {
                 var entryBtn = card.querySelector('.entry-expand-btn');
-                if (!preview || !full) return;
-                
-                if (!isExpanded) {
-                    full.classList.add('expanded');
-                    preview.style.display = 'none';
-                    if (entryBtn) entryBtn.textContent = '\u25B2 collapse';
+                if (isExpanded) {
+                    collapseEntry(card, entryBtn);
                 } else {
-                    full.classList.remove('expanded');
-                    preview.style.display = '';
-                    if (entryBtn) entryBtn.textContent = '\u25BC expand';
+                    expandEntry(card, entryBtn);
                 }
             });
             btn.dataset.expanded = !isExpanded;
