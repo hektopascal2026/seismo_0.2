@@ -111,9 +111,9 @@
                     <rect width="24" height="16" fill="#FFFFC5"/>
                     <path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Seismo
+                Feed
             </a>
-            <a href="?action=feeds" class="nav-link">Feeds</a>
+            <a href="?action=feeds" class="nav-link">RSS</a>
             <a href="?action=mail" class="nav-link">Mail</a>
             <a href="?action=settings" class="nav-link">Settings</a>
         </nav>
@@ -275,10 +275,37 @@
                     <h3 class="entry-title">
                         <a href="#">Card Title Example</a>
                     </h3>
-                    <div class="entry-content">
-                        This is an example of card content. Cards can contain various types of information and are used throughout the application for displaying feed items, emails, and other content.
+                    <div class="entry-content entry-preview">
+                        This is an example of card content. Cards can contain various types of information and are used throughout the application for displaying feed items...
                     </div>
-                    <a href="#" class="entry-link">Read more →</a>
+                    <div class="entry-full-content">This is the full content of the card. It contains much more text than the preview. Cards can contain various types of information and are used throughout the application for displaying feed items, emails, and other content. When expanded, the full text is shown in a pre-wrapped format preserving line breaks.</div>
+                    <div class="entry-actions">
+                        <a href="#" class="entry-link">Read more →</a>
+                        <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Expand/Collapse Section -->
+        <section class="styleguide-section">
+            <h2>Expand / Collapse</h2>
+            <p>Entries can be expanded to show full content. Each entry has its own toggle button ("ausklappen" / "einklappen"). A global toggle in the section title row expands or collapses all entries at once.</p>
+            
+            <h3>Section Title with Global Toggle</h3>
+            <div class="component-demo">
+                <div class="section-title-row">
+                    <h2 class="section-title" style="margin-bottom: 0;">Refreshed: 24.01.2026 12:00</h2>
+                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                </div>
+            </div>
+            
+            <h3>Per-Entry Toggle</h3>
+            <p>Each entry card with content longer than 200 characters shows an "ausklappen" button. When clicked, it reveals the full content and changes to "einklappen".</p>
+            <div class="component-demo">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                    <button class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">einklappen</button>
                 </div>
             </div>
         </section>
@@ -404,5 +431,55 @@
             </div>
         </section>
     </div>
+
+    <script>
+    (function() {
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.entry-expand-btn');
+            if (!btn) return;
+            var card = btn.closest('.entry-card');
+            if (!card) return;
+            var preview = card.querySelector('.entry-preview');
+            var full = card.querySelector('.entry-full-content');
+            if (!preview || !full) return;
+            
+            var isExpanded = full.classList.contains('expanded');
+            if (isExpanded) {
+                full.classList.remove('expanded');
+                preview.style.display = '';
+                btn.textContent = 'ausklappen';
+            } else {
+                full.classList.add('expanded');
+                preview.style.display = 'none';
+                btn.textContent = 'einklappen';
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.entry-expand-all-btn');
+            if (!btn) return;
+            
+            var expanding = btn.textContent.trim() === 'ausklappen';
+            var cards = document.querySelectorAll('.entry-card');
+            cards.forEach(function(card) {
+                var preview = card.querySelector('.entry-preview');
+                var full = card.querySelector('.entry-full-content');
+                var entryBtn = card.querySelector('.entry-expand-btn');
+                if (!preview || !full) return;
+                
+                if (expanding) {
+                    full.classList.add('expanded');
+                    preview.style.display = 'none';
+                    if (entryBtn) entryBtn.textContent = 'einklappen';
+                } else {
+                    full.classList.remove('expanded');
+                    preview.style.display = '';
+                    if (entryBtn) entryBtn.textContent = 'ausklappen';
+                }
+            });
+            btn.textContent = expanding ? 'einklappen' : 'ausklappen';
+        });
+    })();
+    </script>
 </body>
 </html>

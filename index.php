@@ -17,10 +17,6 @@ switch ($action) {
         // Show main page with entries only (no feeds section)
         $searchQuery = trim($_GET['q'] ?? '');
 
-        // Tag filter: selected tags from query (multi-select)
-        $selectedTags = isset($_GET['tags']) ? array_filter((array)$_GET['tags']) : [];
-        $selectedEmailTags = isset($_GET['email_tags']) ? array_filter((array)$_GET['email_tags']) : [];
-
         // Get all unique tags (categories) from RSS feeds
         $tagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' ORDER BY category");
         $tags = $tagsStmt->fetchAll(PDO::FETCH_COLUMN);
@@ -28,6 +24,18 @@ switch ($action) {
         // Get all unique email tags (excluding unclassified)
         $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' ORDER BY tag");
         $emailTags = $emailTagsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Tag filter: selected tags from query (multi-select)
+        // On first visit (no form submitted), auto-select all tags except "unsortiert"
+        $tagsSubmitted = isset($_GET['tags_submitted']);
+        if ($tagsSubmitted) {
+            $selectedTags = isset($_GET['tags']) ? array_filter((array)$_GET['tags']) : [];
+            $selectedEmailTags = isset($_GET['email_tags']) ? array_filter((array)$_GET['email_tags']) : [];
+        } else {
+            // First visit: auto-select all tags except "unsortiert"
+            $selectedTags = array_values(array_filter($tags, function($t) { return $t !== 'unsortiert'; }));
+            $selectedEmailTags = array_values(array_filter($emailTags, function($t) { return $t !== 'unsortiert' && $t !== 'unclassified'; }));
+        }
         
         // If search query exists, show search results instead of latest items
         if (!empty($searchQuery)) {
@@ -118,7 +126,7 @@ switch ($action) {
         break;
         
     case 'feeds':
-        // Show feeds management page
+        // Show RSS entries page
         $selectedCategory = $_GET['category'] ?? null;
         
         // Set default category "unsortiert" for feeds without category
@@ -128,29 +136,33 @@ switch ($action) {
         $categoriesStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' ORDER BY category");
         $categories = $categoriesStmt->fetchAll(PDO::FETCH_COLUMN);
         
-        // Get feeds (only enabled, filtered by category if selected, ordered chronologically by latest item)
+        // Get RSS entries (from enabled feeds, filtered by category if selected)
         if ($selectedCategory) {
             $stmt = $pdo->prepare("
-                SELECT f.*, 
-                       (SELECT MAX(fi.published_date) FROM feed_items fi WHERE fi.feed_id = f.id) as latest_item_date
-                FROM feeds f
+                SELECT fi.*, f.title as feed_title
+                FROM feed_items fi
+                JOIN feeds f ON fi.feed_id = f.id
                 WHERE f.disabled = 0 AND f.category = ?
-                ORDER BY latest_item_date DESC, f.created_at DESC
+                ORDER BY fi.published_date DESC, fi.cached_at DESC
+                LIMIT 50
             ");
             $stmt->execute([$selectedCategory]);
         } else {
             $stmt = $pdo->query("
-                SELECT f.*, 
-                       (SELECT MAX(fi.published_date) FROM feed_items fi WHERE fi.feed_id = f.id) as latest_item_date
-                FROM feeds f
+                SELECT fi.*, f.title as feed_title
+                FROM feed_items fi
+                JOIN feeds f ON fi.feed_id = f.id
                 WHERE f.disabled = 0
-                ORDER BY latest_item_date DESC, f.created_at DESC
+                ORDER BY fi.published_date DESC, fi.cached_at DESC
+                LIMIT 50
             ");
         }
-        $feeds = $stmt->fetchAll();
+        $rssItems = $stmt->fetchAll();
         
-        // Get last code change date (use modification time of index.php)
-        $lastChangeDate = date('d.m.Y', filemtime(__FILE__));
+        // Get last feed refresh date/time
+        $lastRefreshStmt = $pdo->query("SELECT MAX(last_fetched) as last_refresh FROM feeds WHERE last_fetched IS NOT NULL");
+        $lastRefreshRow = $lastRefreshStmt->fetch();
+        $lastRssRefreshDate = $lastRefreshRow['last_refresh'] ? date('d.m.Y H:i', strtotime($lastRefreshRow['last_refresh'])) : null;
         
         include 'views/feeds.php';
         break;
@@ -1371,7 +1383,7 @@ function handleDeleteSender($pdo) {
     $stmt = $pdo->prepare("DELETE FROM sender_tags WHERE from_email = ?");
     $stmt->execute([$fromEmail]);
     
-    $_SESSION['success'] = 'Sender removed from settings. Emails will be tagged as unclassified.';
+    $_SESSION['success'] = 'Sender removed from settings. Emails will be tagged as unsortiert.';
     header('Location: ?action=settings');
 }
 

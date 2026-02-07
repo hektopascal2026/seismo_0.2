@@ -15,9 +15,9 @@
                     <rect width="24" height="16" fill="#FFFFC5"/>
                     <path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Seismo
+                Feed
             </a>
-            <a href="?action=feeds" class="nav-link active">Feeds</a>
+            <a href="?action=feeds" class="nav-link active">RSS</a>
             <a href="?action=mail" class="nav-link">Mail</a>
             <a href="?action=settings" class="nav-link">Settings</a>
         </nav>
@@ -45,7 +45,7 @@
             </div>
             <div class="feed-actions-top">
                 <a href="?action=refresh_feed&id=<?= $feed['id'] ?>" class="btn btn-primary">Refresh Feed</a>
-                <a href="?action=feeds" class="btn btn-secondary">Back to Feeds</a>
+                <a href="?action=feeds" class="btn btn-secondary">Back to RSS</a>
             </div>
         </div>
 

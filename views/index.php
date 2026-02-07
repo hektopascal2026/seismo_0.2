@@ -15,9 +15,9 @@
                     <rect width="24" height="16" fill="#FFFFC5"/>
                     <path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Seismo
+                Feed
             </a>
-            <a href="?action=feeds" class="nav-link">Feeds</a>
+            <a href="?action=feeds" class="nav-link">RSS</a>
             <a href="?action=mail" class="nav-link">Mail</a>
             <a href="?action=settings" class="nav-link">Settings</a>
         </nav>
@@ -46,6 +46,7 @@
         <!-- Search Box -->
         <div class="search-section">
             <form method="GET" action="?action=index" class="search-form">
+                <input type="hidden" name="tags_submitted" value="1">
                 <input type="search" name="q" placeholder="Search..." class="search-input" value="<?= htmlspecialchars($searchQuery ?? '') ?>">
                 <button type="submit" class="btn btn-primary">Search</button>
                 <?php if (!empty($searchQuery) || !empty($selectedTags) || !empty($selectedEmailTags)): ?>
@@ -103,24 +104,36 @@
         <!-- Latest Entries from All Feeds / Search Results -->
         <div class="latest-entries-section">
             <?php if (!empty($searchQuery)): ?>
-                <h2 class="section-title">
-                    Search Results<?= $searchResultsCount !== null ? ' (' . $searchResultsCount . ')' : '' ?>
-                    <span style="font-weight: 400; font-size: 18px; color: #666;">for "<?= htmlspecialchars($searchQuery) ?>"</span>
-                </h2>
+                <div class="section-title-row">
+                    <h2 class="section-title">
+                        Search Results<?= $searchResultsCount !== null ? ' (' . $searchResultsCount . ')' : '' ?>
+                        <span style="font-weight: 400; font-size: 18px; color: #666;">for "<?= htmlspecialchars($searchQuery) ?>"</span>
+                    </h2>
+                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                </div>
             <?php else: ?>
-                <h2 class="section-title">
-                    <?php if ($lastRefreshDate): ?>
-                        Refreshed: <?= htmlspecialchars($lastRefreshDate) ?>
-                    <?php else: ?>
-                        Refreshed: Never
-                    <?php endif; ?>
-                </h2>
+                <div class="section-title-row">
+                    <h2 class="section-title">
+                        <?php if ($lastRefreshDate): ?>
+                            Refreshed: <?= htmlspecialchars($lastRefreshDate) ?>
+                        <?php else: ?>
+                            Refreshed: Never
+                        <?php endif; ?>
+                    </h2>
+                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                </div>
             <?php endif; ?>
             
             <?php if (!empty($allItems)): ?>
                 <?php foreach ($allItems as $itemWrapper): ?>
                     <?php if ($itemWrapper['type'] === 'feed'): ?>
                         <?php $item = $itemWrapper['data']; ?>
+                        <?php
+                            $fullContent = strip_tags($item['content'] ?: $item['description']);
+                            $contentPreview = mb_substr($fullContent, 0, 200);
+                            if (mb_strlen($fullContent) > 200) $contentPreview .= '...';
+                            $hasMore = mb_strlen($fullContent) > 200;
+                        ?>
                         <div class="entry-card">
                             <div class="entry-header">
                                 <span class="entry-feed"><?= htmlspecialchars($item['feed_title']) ?></span>
@@ -138,12 +151,8 @@
                                 </a>
                             </h3>
                             <?php if ($item['description'] || $item['content']): ?>
-                                <div class="entry-content">
+                                <div class="entry-content entry-preview">
                                     <?php 
-                                        $content = strip_tags($item['content'] ?: $item['description']);
-                                        $contentPreview = mb_substr($content, 0, 200);
-                                        if (mb_strlen($content) > 200) $contentPreview .= '...';
-                                        
                                         if (!empty($searchQuery)) {
                                             echo highlightSearchTerm($contentPreview, $searchQuery);
                                         } else {
@@ -151,15 +160,20 @@
                                         }
                                     ?>
                                 </div>
+                                <div class="entry-full-content"><?= htmlspecialchars($fullContent) ?></div>
                             <?php endif; ?>
-                            <?php if ($item['link']): ?>
-                                <a href="<?= htmlspecialchars($item['link']) ?>" target="_blank" rel="noopener" class="entry-link">Read more →</a>
-                            <?php endif; ?>
+                            <div class="entry-actions">
+                                <?php if ($item['link']): ?>
+                                    <a href="<?= htmlspecialchars($item['link']) ?>" target="_blank" rel="noopener" class="entry-link">Read more →</a>
+                                <?php endif; ?>
+                                <?php if ($hasMore): ?>
+                                    <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php else: ?>
                         <?php $email = $itemWrapper['data']; ?>
                         <?php
-                            // Get date from various possible fields
                             $dateValue = $email['date_received'] ?? $email['date_utc'] ?? $email['created_at'] ?? $email['date_sent'] ?? null;
                             $createdAt = $dateValue ? date('d.m.Y H:i', strtotime($dateValue)) : '';
                             
@@ -177,6 +191,7 @@
                             $body = trim(preg_replace('/\s+/', ' ', $body ?? ''));
                             $bodyPreview = mb_substr($body, 0, 200);
                             if (mb_strlen($body) > 200) $bodyPreview .= '...';
+                            $hasMore = mb_strlen($body) > 200;
                         ?>
                         <div class="entry-card">
                             <div class="entry-header">
@@ -192,7 +207,7 @@
                                     <?= htmlspecialchars($subject) ?>
                                 <?php endif; ?>
                             </h3>
-                            <div class="entry-content">
+                            <div class="entry-content entry-preview">
                                 <?php 
                                     if (!empty($searchQuery)) {
                                         echo highlightSearchTerm($bodyPreview, $searchQuery);
@@ -201,6 +216,12 @@
                                     }
                                 ?>
                             </div>
+                            <div class="entry-full-content"><?= htmlspecialchars($body) ?></div>
+                            <?php if ($hasMore): ?>
+                                <div class="entry-actions">
+                                    <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 <?php endforeach; ?>
@@ -218,5 +239,56 @@
     
     <!-- Floating Refresh Button -->
     <a href="?action=refresh_all_feeds&from=index" class="floating-refresh-btn" title="Refresh all feeds">Refresh</a>
+
+    <script>
+    (function() {
+        // Per-entry expand/collapse
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.entry-expand-btn');
+            if (!btn) return;
+            var card = btn.closest('.entry-card');
+            var preview = card.querySelector('.entry-preview');
+            var full = card.querySelector('.entry-full-content');
+            if (!preview || !full) return;
+            
+            var isExpanded = full.classList.contains('expanded');
+            if (isExpanded) {
+                full.classList.remove('expanded');
+                preview.style.display = '';
+                btn.textContent = 'ausklappen';
+            } else {
+                full.classList.add('expanded');
+                preview.style.display = 'none';
+                btn.textContent = 'einklappen';
+            }
+        });
+
+        // Global expand/collapse
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.entry-expand-all-btn');
+            if (!btn) return;
+            
+            var expanding = btn.textContent.trim() === 'ausklappen';
+            var cards = document.querySelectorAll('.entry-card');
+            cards.forEach(function(card) {
+                var preview = card.querySelector('.entry-preview');
+                var full = card.querySelector('.entry-full-content');
+                var entryBtn = card.querySelector('.entry-expand-btn');
+                if (!preview || !full) return;
+                
+                if (expanding) {
+                    full.classList.add('expanded');
+                    preview.style.display = 'none';
+                    if (entryBtn) entryBtn.textContent = 'einklappen';
+                } else {
+                    full.classList.remove('expanded');
+                    preview.style.display = '';
+                    if (entryBtn) entryBtn.textContent = 'ausklappen';
+                }
+            });
+            btn.textContent = expanding ? 'einklappen' : 'ausklappen';
+        });
+    })();
+    </script>
 </body>
 </html>

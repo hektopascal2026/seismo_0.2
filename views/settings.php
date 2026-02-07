@@ -120,9 +120,9 @@
                     <rect width="24" height="16" fill="#FFFFC5"/>
                     <path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Seismo
+                Feed
             </a>
-            <a href="?action=feeds" class="nav-link">Feeds</a>
+            <a href="?action=feeds" class="nav-link">RSS</a>
             <a href="?action=mail" class="nav-link">Mail</a>
             <a href="?action=settings" class="nav-link active">Settings</a>
         </nav>
@@ -186,6 +186,9 @@
                         <div class="settings-item">
                             <div class="settings-item-info">
                                 <div class="settings-item-title"><?= htmlspecialchars($feed['title']) ?></div>
+                                <?php if (!empty($feed['description'])): ?>
+                                    <div class="settings-item-meta"><?= htmlspecialchars($feed['description']) ?></div>
+                                <?php endif; ?>
                                 <div class="settings-item-meta"><?= htmlspecialchars($feed['url']) ?></div>
                                 <?php if ($feed['last_fetched']): ?>
                                     <div class="settings-item-meta">Last updated: <?= date('d.m.Y H:i', strtotime($feed['last_fetched'])) ?></div>
@@ -273,7 +276,7 @@
                                     </a>
                                     <a href="?action=delete_sender&email=<?= urlencode($sender['email']) ?>&from=settings" 
                                        class="btn btn-danger" 
-                                       onclick="return confirm('Are you sure you want to remove this sender from settings? Emails will be tagged as unclassified.');"
+                                       onclick="return confirm('Are you sure you want to remove this sender from settings? Emails will be tagged as unsortiert.');"
                                        style="font-size: 14px; padding: 8px 16px;">
                                         Delete
                                     </a>

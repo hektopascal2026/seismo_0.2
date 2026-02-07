@@ -523,6 +523,40 @@ h3 {
     font-size: 16px;
 }
 
+/* Section Title Row */
+.section-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.section-title-row .section-title {
+    margin-bottom: 0;
+}
+
+/* Entry Expand/Collapse */
+.entry-full-content {
+    display: none;
+    color: #333333;
+    line-height: 1.6;
+    font-size: 15px;
+    margin-bottom: 12px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.entry-full-content.expanded {
+    display: block;
+}
+
+.entry-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+
 /* Search Highlight */
 .search-highlight {
     background-color: #FFFFC5;
