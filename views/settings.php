@@ -269,16 +269,18 @@
                             </div>
                             <div class="settings-item-actions" style="flex-direction: column; align-items: flex-end; gap: 10px;">
                                 <div style="display: flex; gap: 10px;">
-                                    <a href="?action=toggle_sender&email=<?= urlencode($sender['email']) ?>&from=settings" 
-                                       class="btn <?= $sender['disabled'] ? 'btn-success' : 'btn-warning' ?>" 
-                                       style="font-size: 14px; padding: 8px 16px;">
-                                        <?= $sender['disabled'] ? 'Enable' : 'Disable' ?>
-                                    </a>
-                                    <a href="?action=delete_sender&email=<?= urlencode($sender['email']) ?>&from=settings" 
-                                       class="btn btn-danger" 
-                                       style="font-size: 14px; padding: 8px 16px;">
-                                        Remove
-                                    </a>
+                                    <form method="POST" action="?action=toggle_sender" style="margin: 0;">
+                                        <input type="hidden" name="email" value="<?= htmlspecialchars($sender['email']) ?>">
+                                        <button type="submit" class="btn <?= $sender['disabled'] ? 'btn-success' : 'btn-warning' ?>" style="font-size: 14px; padding: 8px 16px;">
+                                            <?= $sender['disabled'] ? 'Enable' : 'Disable' ?>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="?action=delete_sender" style="margin: 0;">
+                                        <input type="hidden" name="email" value="<?= htmlspecialchars($sender['email']) ?>">
+                                        <button type="submit" class="btn btn-danger" style="font-size: 14px; padding: 8px 16px;">
+                                            Remove
+                                        </button>
+                                    </form>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <label style="font-weight: 600; font-size: 14px;">Tag:</label>

@@ -1414,8 +1414,8 @@ function handleUpdateSenderTag($pdo) {
 }
 
 function handleToggleSender($pdo) {
-    $fromEmail = trim($_GET['email'] ?? '');
-    $from = $_GET['from'] ?? 'settings';
+    $fromEmail = trim($_POST['email'] ?? $_GET['email'] ?? '');
+    $from = $_POST['from'] ?? $_GET['from'] ?? 'settings';
     
     if (empty($fromEmail)) {
         $_SESSION['error'] = 'Invalid sender email';
@@ -1446,8 +1446,8 @@ function handleToggleSender($pdo) {
 }
 
 function handleDeleteSender($pdo) {
-    $fromEmail = trim($_GET['email'] ?? '');
-    $from = $_GET['from'] ?? 'settings';
+    $fromEmail = trim($_POST['email'] ?? $_GET['email'] ?? '');
+    $from = $_POST['from'] ?? $_GET['from'] ?? 'settings';
     
     if (empty($fromEmail)) {
         $_SESSION['error'] = 'Invalid sender email';
