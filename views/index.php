@@ -45,7 +45,8 @@
 
         <!-- Search Box -->
         <div class="search-section">
-            <form method="GET" action="?action=index" class="search-form">
+            <form method="GET" class="search-form">
+                <input type="hidden" name="action" value="index">
                 <input type="hidden" name="tags_submitted" value="1">
                 <input type="search" name="q" placeholder="Search..." class="search-input" value="<?= htmlspecialchars($searchQuery ?? '') ?>">
                 <button type="submit" class="btn btn-primary">Search</button>

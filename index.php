@@ -29,8 +29,8 @@ switch ($action) {
         // On first visit (no form submitted), auto-select all tags except "unsortiert"
         $tagsSubmitted = isset($_GET['tags_submitted']);
         if ($tagsSubmitted) {
-            $selectedTags = isset($_GET['tags']) ? array_filter((array)$_GET['tags']) : [];
-            $selectedEmailTags = isset($_GET['email_tags']) ? array_filter((array)$_GET['email_tags']) : [];
+            $selectedTags = isset($_GET['tags']) ? array_values(array_filter((array)$_GET['tags'], 'strlen')) : [];
+            $selectedEmailTags = isset($_GET['email_tags']) ? array_values(array_filter((array)$_GET['email_tags'], 'strlen')) : [];
         } else {
             // First visit: auto-select all tags except "unsortiert"
             $selectedTags = array_values(array_filter($tags, function($t) { return $t !== 'unsortiert'; }));
