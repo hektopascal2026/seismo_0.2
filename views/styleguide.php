@@ -20,7 +20,6 @@
             font-size: 28px;
             font-weight: 700;
             margin-bottom: 30px;
-            color: #000000;
         }
         
         .styleguide-section h3 {
@@ -28,7 +27,6 @@
             font-weight: 600;
             margin-top: 30px;
             margin-bottom: 15px;
-            color: #000000;
         }
         
         .color-swatch {
@@ -130,48 +128,40 @@
             <p class="subtitle">Design system documentation for Seismo</p>
         </header>
 
-        <!-- Logo Section -->
+        <!-- Logo -->
         <section class="styleguide-section">
             <h2>Logo</h2>
-            <p>The Seismo logo features a black waveform on a light yellow background (#FFFFC5). The waveform represents seismic activity, aligning with the project's name.</p>
+            <p>Black waveform on light yellow (#FFFFC5) background. Use <code>.logo-icon</code> for inline (1em height) and <code>.logo-icon-large</code> for header size (32px).</p>
             
             <div class="logo-showcase">
                 <div class="logo-variant">
-                    <div class="logo-variant-label">Standard Size</div>
-                    <svg class="logo-icon" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" style="height: 32px;">
+                    <div class="logo-variant-label">Inline (1em)</div>
+                    <svg class="logo-icon" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" style="height: 16px;">
                         <rect width="24" height="16" fill="#FFFFC5"/>
                         <path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                
                 <div class="logo-variant">
-                    <div class="logo-variant-label">Large Size</div>
-                    <svg class="logo-icon logo-icon-large" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" style="height: 64px;">
+                    <div class="logo-variant-label">Large (32px)</div>
+                    <svg class="logo-icon logo-icon-large" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg">
                         <rect width="24" height="16" fill="#FFFFC5"/>
                         <path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-            </div>
-            
-            <h3>SVG Code</h3>
-            <div class="code-block">
-&lt;svg class="logo-icon" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg"&gt;
-    &lt;rect width="24" height="16" fill="#FFFFC5"/&gt;
-    &lt;path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/&gt;
-&lt;/svg&gt;
             </div>
         </section>
 
-        <!-- Colors Section -->
+        <!-- Colors -->
         <section class="styleguide-section">
             <h2>Colors</h2>
-            <p>The color palette is minimal and high-contrast, using black and white as primary colors with strategic use of yellow for highlights.</p>
+            <p>Minimal high-contrast palette. Black and white primary, yellow for highlights, semantic colors for buttons.</p>
             
+            <h3>Core</h3>
             <div>
                 <div class="color-swatch" style="background-color: #000000;">
                     <div class="color-swatch-info">#000000<br>Black</div>
                 </div>
-                <div class="color-swatch" style="background-color: #FFFFFF; border-color: #000000;">
+                <div class="color-swatch" style="background-color: #FFFFFF;">
                     <div class="color-swatch-info">#FFFFFF<br>White</div>
                 </div>
                 <div class="color-swatch" style="background-color: #FFFFC5;">
@@ -183,13 +173,25 @@
                 <div class="color-swatch" style="background-color: #666666;">
                     <div class="color-swatch-info">#666666<br>Gray</div>
                 </div>
-                <div class="color-swatch" style="background-color: #F5F5F5; border-color: #000000;">
+                <div class="color-swatch" style="background-color: #F5F5F5;">
                     <div class="color-swatch-info">#F5F5F5<br>Light Gray</div>
                 </div>
             </div>
             
+            <h3>Semantic</h3>
+            <div>
+                <div class="color-swatch" style="background-color: #FF2C2C;">
+                    <div class="color-swatch-info">#FF2C2C<br>Danger</div>
+                </div>
+                <div class="color-swatch" style="background-color: #ff9900;">
+                    <div class="color-swatch-info">#ff9900<br>Warning</div>
+                </div>
+                <div class="color-swatch" style="background-color: #00aa00;">
+                    <div class="color-swatch-info">#00aa00<br>Success</div>
+                </div>
+            </div>
+
             <h3>Tag Colors</h3>
-            <p>Tags use specific background colors to distinguish between different types:</p>
             <div>
                 <div class="color-swatch" style="background-color: #add8e6;">
                     <div class="color-swatch-info">#add8e6<br>RSS Tags</div>
@@ -200,98 +202,94 @@
             </div>
         </section>
 
-        <!-- Typography Section -->
+        <!-- Typography -->
         <section class="styleguide-section">
             <h2>Typography</h2>
-            <p>Seismo uses system fonts for optimal performance and native feel across platforms.</p>
+            <p>System font stack for native feel. All sizes in px, weights 400-700.</p>
             
-            <h3>Font Family</h3>
             <div class="code-block">-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif</div>
             
-            <h3>Headings</h3>
             <div class="typography-sample">
-                <h1 style="margin: 0;">Heading 1 - 32px, Bold (700)</h1>
+                <h1 style="margin: 0;">H1 &mdash; 32px, 700</h1>
             </div>
             <div class="typography-sample">
-                <h2 style="margin: 0;">Heading 2 - 24px, Semi-bold (600)</h2>
+                <h2 style="margin: 0;">H2 &mdash; 24px, 600</h2>
             </div>
             <div class="typography-sample">
-                <h3 style="margin: 0;">Heading 3 - 20px, Semi-bold (600)</h3>
+                <h3 style="margin: 0;">H3 &mdash; 20px, 600</h3>
             </div>
-            
-            <h3>Body Text</h3>
             <div class="typography-sample">
-                <p style="margin: 0;">Body text - 16px, Regular (400), Line-height: 1.6</p>
+                <p style="margin: 0;">Body &mdash; 16px, 400, line-height 1.6</p>
             </div>
-            
-            <h3>Small Text</h3>
             <div class="typography-sample">
-                <p style="margin: 0; font-size: 14px;">Small text - 14px, Regular (400)</p>
+                <p style="margin: 0; font-size: 14px;">Small &mdash; 14px, 400</p>
+            </div>
+            <div class="typography-sample">
+                <p style="margin: 0; font-size: 13px;">Meta &mdash; 13px, 500 (card headers, tags)</p>
             </div>
         </section>
 
-        <!-- Buttons Section -->
-        <section class="styleguide-section">
-            <h2>Buttons</h2>
-            <p>Buttons use a consistent 2px border and have hover states that invert colors.</p>
-
-            <div class="component-demo">
-                <h3>Button Variants</h3>
-                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0;">
-                    <a href="#" class="btn btn-primary">Primary Button</a>
-                    <a href="#" class="btn btn-secondary">Secondary Button</a>
-                    <a href="#" class="btn btn-danger">Danger Button</a>
-                    <a href="#" class="btn btn-warning">Warning Button</a>
-                    <a href="#" class="btn btn-success">Success Button</a>
-                </div>
-                <p style="margin-top: 20px;"><strong>Danger Button:</strong> #FF2C2C border, hover state with colored background and white text</p>
-            </div>
-        </section>
-
-        <!-- Navigation Section -->
+        <!-- Navigation -->
         <section class="styleguide-section">
             <h2>Navigation</h2>
-            <p>The main navigation uses tabs with a 2px black border. Adjacent tabs overlap by 2px to create seamless appearance. Active state has black background with white text.</p>
+            <p>Tab bar with 2px black border. Adjacent tabs overlap by 2px (<code>margin-left: -2px</code>) so shared borders stay 2px. Active tab: black background, white text. Tabs sit 2px above the bottom border to create the tab effect.</p>
 
             <div class="component-demo">
                 <nav class="main-nav">
-                    <a href="#" class="nav-link active">Active Link</a>
-                    <a href="#" class="nav-link">Inactive Link</a>
-                    <a href="#" class="nav-link">Another Link</a>
+                    <a href="#" class="nav-link active">Active</a>
+                    <a href="#" class="nav-link">Inactive</a>
+                    <a href="#" class="nav-link">Another</a>
                 </nav>
             </div>
         </section>
 
-        <!-- Cards Section -->
+        <!-- Buttons -->
+        <section class="styleguide-section">
+            <h2>Buttons</h2>
+            <p>2px border, hover inverts to colored background with white text. Padding: 10px 20px, font-size: 16px, font-weight: 600.</p>
+
+            <div class="component-demo">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0;">
+                    <a href="#" class="btn btn-primary">Primary</a>
+                    <a href="#" class="btn btn-secondary">Secondary</a>
+                    <a href="#" class="btn btn-danger">Danger</a>
+                    <a href="#" class="btn btn-warning">Warning</a>
+                    <a href="#" class="btn btn-success">Success</a>
+                </div>
+                <p><strong>Primary:</strong> black bg, white text. <strong>Secondary:</strong> white bg, black border. <strong>Danger:</strong> #FF2C2C border. <strong>Warning:</strong> #ff9900 border. <strong>Success:</strong> #00aa00 border.</p>
+            </div>
+        </section>
+
+        <!-- Cards -->
         <section class="styleguide-section">
             <h2>Cards</h2>
-            <p>Cards are used for displaying content items with a subtle border and hover effect.</p>
+            <p>2px black border, 14px 16px padding. Hover adds <code>box-shadow: 2px 2px 0px #000000</code> without changing size.</p>
             
             <div class="component-demo">
                 <div class="entry-card">
                     <div class="entry-header">
-                        <span class="entry-feed">Feed Name</span>
-                        <span class="entry-date">01.01.2024 12:00</span>
+                        <span class="entry-feed">Source Name</span>
+                        <span class="entry-date">24.01.2026 12:00</span>
                     </div>
                     <h3 class="entry-title">
-                        <a href="#">Card Title Example</a>
+                        <a href="#">Entry Title Example</a>
                     </h3>
                     <div class="entry-content entry-preview">
-                        This is an example of card content. Cards can contain various types of information and are used throughout the application for displaying feed items...
+                        Preview text truncated to 200 characters. Cards display feed items, emails, and Substack posts with consistent styling across all pages...
                     </div>
-                    <div class="entry-full-content" style="display:none">This is the full content of the card. It contains much more text than the preview. Cards can contain various types of information and are used throughout the application for displaying feed items, emails, and other content. When expanded, the full text is shown in a pre-wrapped format preserving line breaks.</div>
+                    <div class="entry-full-content" style="display:none">Full expanded content shown when the user clicks expand. This replaces the preview and shows the complete text in a pre-wrapped format that preserves line breaks. The content area uses the same font size and color as the preview.</div>
                     <div class="entry-actions">
-                        <a href="#" class="entry-link">Read more →</a>
+                        <a href="#" class="entry-link">Read more &rarr;</a>
                         <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Expand/Collapse Section -->
+        <!-- Expand / Collapse -->
         <section class="styleguide-section">
             <h2>Expand / Collapse</h2>
-            <p>Entries can be expanded to show full content. Each entry has its own toggle button: "&#9660; expand" / "&#9650; collapse". A global toggle in the section title row uses "&#9660; expand all" / "&#9650; collapse all" to expand or collapse all entries at once.</p>
+            <p>Entries with content longer than 200 characters get a toggle button. Per-entry: "&#9660; expand" / "&#9650; collapse". Global: "&#9660; expand all" / "&#9650; collapse all" in the section title row. Triangle arrows indicate direction.</p>
             
             <h3>Section Title with Global Toggle</h3>
             <div class="component-demo">
@@ -301,134 +299,165 @@
                 </div>
             </div>
             
-            <h3>Per-Entry Toggle</h3>
-            <p>Each entry card with content longer than 200 characters shows a toggle button. "&#9660; expand" reveals the full content, "&#9650; collapse" returns to the preview. The triangle arrow makes the toggle direction visually clear.</p>
+            <h3>Per-Entry Buttons</h3>
             <div class="component-demo">
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 12px;">
                     <button class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
                     <button class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">&#9650; collapse</button>
                 </div>
             </div>
         </section>
 
-        <!-- Messages Section -->
-        <section class="styleguide-section">
-            <h2>Messages</h2>
-            <p>Messages provide feedback to users for success, error, and info states.</p>
-            
-            <div class="component-demo">
-                <div class="message message-success">Success message: Operation completed successfully.</div>
-                <div class="message message-error">Error message: Something went wrong. Please try again.</div>
-                <div class="message message-info">Info message: This is an informational message.</div>
-            </div>
-        </section>
-
-        <!-- Form Elements Section -->
-        <section class="styleguide-section">
-            <h2>Form Elements</h2>
-            <p>Form inputs use a consistent 2px black border and have focus states.</p>
-            
-            <div class="component-demo">
-                <h3>Input Fields</h3>
-                <input type="text" class="search-input" placeholder="Search input example" style="margin-bottom: 15px; display: block; width: 100%; max-width: 400px;">
-                <input type="text" class="feed-input" placeholder="Feed input example" style="display: block; width: 100%; max-width: 400px;">
-            </div>
-        </section>
-
-        <!-- Search Highlight Section -->
-        <section class="styleguide-section">
-            <h2>Search Highlight</h2>
-            <p>Search terms are highlighted with a light yellow background (#FFFFC5) to make them easily visible.</p>
-            
-            <div class="component-demo">
-                <p>This is an example of text with <mark class="search-highlight">highlighted search terms</mark> that match the user's query.</p>
-            </div>
-        </section>
-
-        <!-- Tag Filters Section -->
+        <!-- Tag Filters -->
         <section class="styleguide-section">
             <h2>Tag Filters</h2>
-            <p>Tag filters allow users to filter content by categories. Tags use consistent sizing (padding: 6px 12px, font-size: 13px, font-weight: 500) across all pages.</p>
+            <p>Two filter patterns: checkbox pills (main page, multi-select) and category buttons (RSS, Mail, Substack pages, single-select). Both use 6px 12px padding, 13px font, 500 weight.</p>
             
-            <h3>Active vs Inactive States</h3>
-            <p>Active tags have a colored background with black text. Inactive tags have a white background with black text.</p>
-            
+            <h3>Checkbox Pills (Main Page)</h3>
             <div class="component-demo">
-                <h4>RSS Tags (Light Blue: #add8e6)</h4>
-                <div class="tag-filter-list">
-                    <label class="tag-filter-pill tag-filter-pill-active" style="background-color: #add8e6;">
+                <p style="margin-bottom: 12px;"><strong>RSS</strong> (active: #add8e6)</p>
+                <div class="tag-filter-list" style="margin-bottom: 20px;">
+                    <label class="tag-filter-pill" style="background-color: #add8e6;">
                         <input type="checkbox" checked>
-                        <span>Active RSS Tag</span>
+                        <span>Active Tag</span>
                     </label>
                     <label class="tag-filter-pill">
                         <input type="checkbox">
-                        <span>Inactive RSS Tag</span>
-                    </label>
-                    <label class="tag-filter-pill">
-                        <input type="checkbox">
-                        <span>Another RSS Tag</span>
+                        <span>Inactive Tag</span>
                     </label>
                 </div>
                 
-                <h4 style="margin-top: 30px;">Email Tags (Light Orange: #FFDBBB)</h4>
+                <p style="margin-bottom: 12px;"><strong>Email</strong> (active: #FFDBBB)</p>
                 <div class="tag-filter-list">
-                    <label class="tag-filter-pill tag-filter-pill-active" style="background-color: #FFDBBB;">
+                    <label class="tag-filter-pill" style="background-color: #FFDBBB;">
                         <input type="checkbox" checked>
-                        <span>Active Email Tag</span>
+                        <span>Active Tag</span>
                     </label>
                     <label class="tag-filter-pill">
                         <input type="checkbox">
-                        <span>Inactive Email Tag</span>
-                    </label>
-                    <label class="tag-filter-pill">
-                        <input type="checkbox">
-                        <span>Another Email Tag</span>
+                        <span>Inactive Tag</span>
                     </label>
                 </div>
             </div>
             
-            <h3>Category Buttons</h3>
-            <p>Category buttons (used on feeds.php and mail.php) match the tag pill styling and use the same color scheme:</p>
-            
+            <h3>Category Buttons (RSS, Mail, Substack Pages)</h3>
             <div class="component-demo">
-                <h4>RSS Category Buttons</h4>
                 <div class="category-filter">
-                    <a href="#" class="category-btn active" style="background-color: #add8e6;">All Feeds</a>
-                    <a href="#" class="category-btn" style="background-color: #add8e6;">Category 1</a>
+                    <a href="#" class="category-btn" style="background-color: #add8e6;">All</a>
+                    <a href="#" class="category-btn">Category 1</a>
                     <a href="#" class="category-btn">Category 2</a>
                 </div>
+            </div>
+        </section>
+
+        <!-- Tag Inputs -->
+        <section class="styleguide-section">
+            <h2>Tag Inputs (Settings)</h2>
+            <p>Editable tag inputs on the settings page. Press Enter to save, Escape to cancel. Visual feedback: gray border while saving, green border/background (#00aa00 / #f0fff0) for 2 seconds on success.</p>
+            
+            <div class="component-demo">
+                <h3>Per-Feed Tag</h3>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+                    <label style="font-weight: 600; font-size: 14px;">Tag:</label>
+                    <div class="tag-input-wrapper">
+                        <input type="text" class="feed-tag-input" value="example-tag" style="width: 150px;" readonly>
+                    </div>
+                </div>
+
+                <h3>"All Tags" Rename</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <div class="feed-tag-input-wrapper" style="display: inline-flex;">
+                        <input type="text" class="feed-tag-input" value="tag-name" style="width: auto; min-width: 100px; padding: 6px 12px;" readonly>
+                    </div>
+                </div>
                 
-                <h4 style="margin-top: 30px;">Email Category Buttons</h4>
-                <div class="category-filter">
-                    <a href="#" class="category-btn active" style="background-color: #FFDBBB;">All Emails</a>
-                    <a href="#" class="category-btn" style="background-color: #FFDBBB;">Tag 1</a>
-                    <a href="#" class="category-btn">Tag 2</a>
+                <h3>Save States</h3>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px;">
+                    <div>
+                        <div style="font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px;">DEFAULT</div>
+                        <input type="text" class="feed-tag-input" value="normal" style="width: 120px;" readonly>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px;">SAVING</div>
+                        <input type="text" class="feed-tag-input feed-tag-saving" value="saving..." style="width: 120px;" readonly>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px;">SAVED</div>
+                        <input type="text" class="feed-tag-input feed-tag-saved" value="saved" style="width: 120px;" readonly>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Spacing Section -->
+        <!-- Messages -->
         <section class="styleguide-section">
-            <h2>Spacing</h2>
-            <p>Consistent spacing is used throughout the application for visual hierarchy and readability.</p>
+            <h2>Messages</h2>
+            <p>Feedback messages: 1px border, 10px 14px padding.</p>
             
             <div class="component-demo">
-                <p><strong>Container:</strong> Max-width 1200px, padding 40px 20px</p>
-                <p><strong>Section gaps:</strong> 20-40px between major sections</p>
-                <p><strong>Card padding:</strong> 20-24px</p>
-                <p><strong>Button padding:</strong> 12px 24px</p>
+                <div class="message message-success">Success: Operation completed.</div>
+                <div class="message message-error">Error: Something went wrong.</div>
+                <div class="message message-info">Info: Informational message.</div>
             </div>
         </section>
 
-        <!-- Borders Section -->
+        <!-- Forms -->
         <section class="styleguide-section">
-            <h2>Borders</h2>
-            <p>Borders use 2px solid black (#000000) for primary elements like buttons, cards, and navigation tabs, and 1px for subtle dividers.</p>
+            <h2>Forms</h2>
+            <p>Inputs: 2px black border, 10px 14px padding, 16px font. Focus: #fafafa background.</p>
             
             <div class="component-demo">
-                <div style="border: 2px solid #000000; padding: 20px; margin: 10px 0;">2px solid border (primary - buttons, cards)</div>
-                <div style="border: 2px solid #000000; padding: 20px; margin: 10px 0;">2px solid border (navigation tabs)</div>
-                <div style="border: 1px solid #cccccc; padding: 20px; margin: 10px 0;">1px solid border (subtle dividers)</div>
+                <input type="text" class="search-input" placeholder="Search input" style="margin-bottom: 15px; display: block; width: 100%; max-width: 400px;">
+                <input type="text" class="feed-input" placeholder="Feed/URL input" style="display: block; width: 100%; max-width: 400px;">
+            </div>
+        </section>
+
+        <!-- Search Highlight -->
+        <section class="styleguide-section">
+            <h2>Search Highlight</h2>
+            <p>Matching search terms highlighted with yellow background (#FFFFC5).</p>
+            
+            <div class="component-demo">
+                <p>Example text with <mark class="search-highlight">highlighted terms</mark> matching the query.</p>
+            </div>
+        </section>
+
+        <!-- Spacing & Borders -->
+        <section class="styleguide-section">
+            <h2>Spacing &amp; Borders</h2>
+            
+            <div class="component-demo">
+                <p><strong>Container:</strong> max-width 1200px, padding 20px</p>
+                <p><strong>Cards:</strong> 14px 16px padding, 10px gap between cards</p>
+                <p><strong>Buttons:</strong> 10px 20px padding</p>
+                <p><strong>Nav:</strong> 10px 20px padding per tab, 16px margin-bottom</p>
+                <p><strong>Section gaps:</strong> 16-24px between sections</p>
+            </div>
+            
+            <div class="component-demo">
+                <div style="border: 2px solid #000000; padding: 20px; margin: 10px 0;">2px solid &mdash; buttons, cards, nav tabs, inputs</div>
+                <div style="border: 1px solid #cccccc; padding: 20px; margin: 10px 0;">1px solid &mdash; dividers, category filter bottom</div>
+                <div style="border: 1px solid #000000; padding: 20px; margin: 10px 0;">1px solid black &mdash; messages</div>
+            </div>
+        </section>
+
+        <!-- Hover Effects -->
+        <section class="styleguide-section">
+            <h2>Hover Effects</h2>
+            <p>Cards get a <code>box-shadow: 2px 2px 0px #000000</code> on hover without changing size. Buttons and nav links get a background color change. The floating refresh button has a permanent shadow and inverts on hover.</p>
+            
+            <div class="component-demo">
+                <p>Hover the card and button below:</p>
+                <div class="entry-card" style="max-width: 400px; margin: 16px 0;">
+                    <div class="entry-header">
+                        <span class="entry-feed">Card hover</span>
+                    </div>
+                    <h3 class="entry-title"><a href="#">Shadow appears on hover</a></h3>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <a href="#" class="btn btn-secondary">Button hover</a>
+                    <a href="#" class="floating-refresh-btn" style="position: static;">Refresh</a>
+                </div>
             </div>
         </section>
     </div>
