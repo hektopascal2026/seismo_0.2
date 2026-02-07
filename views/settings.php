@@ -133,7 +133,7 @@
         </header>
 
         <?php if (isset($_SESSION['success'])): ?>
-            <div class="message message-success"><?= htmlspecialchars($_SESSION['success']) ?></div>
+            <div class="message message-success"><?= nl2br(htmlspecialchars($_SESSION['success'])) ?></div>
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
@@ -276,9 +276,8 @@
                                     </a>
                                     <a href="?action=delete_sender&email=<?= urlencode($sender['email']) ?>&from=settings" 
                                        class="btn btn-danger" 
-                                       onclick="return confirm('Are you sure you want to remove this sender from settings? Emails will be tagged as unsortiert.');"
                                        style="font-size: 14px; padding: 8px 16px;">
-                                        Delete
+                                        Remove
                                     </a>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px;">

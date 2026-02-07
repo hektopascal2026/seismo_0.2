@@ -1460,7 +1460,7 @@ function handleDeleteSender($pdo) {
     $stmt = $pdo->prepare("DELETE FROM sender_tags WHERE from_email = ?");
     $stmt->execute([$fromEmail]);
     
-    $_SESSION['success'] = 'Sender removed from settings. Emails will be tagged as unsortiert.';
+    $_SESSION['success'] = "Sender removed from Seismo.\nFuture emails from this address will be tagged as \"unsortiert\" until you reassign them.\nTo stop receiving these emails, you need to manually unsubscribe from the sender's press releases.";
     header('Location: ?action=settings');
 }
 
