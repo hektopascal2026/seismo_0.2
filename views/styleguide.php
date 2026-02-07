@@ -290,13 +290,13 @@
         <!-- Expand/Collapse Section -->
         <section class="styleguide-section">
             <h2>Expand / Collapse</h2>
-            <p>Entries can be expanded to show full content. Each entry has its own toggle button with a triangle indicator: "&#9660; expand" shows the preview, "&#9650; collapse" shows the full content. A global toggle in the section title row expands or collapses all entries at once.</p>
+            <p>Entries can be expanded to show full content. Each entry has its own toggle button: "&#9660; expand" / "&#9650; collapse". A global toggle in the section title row uses "&#9660; expand all" / "&#9650; collapse all" to expand or collapse all entries at once.</p>
             
             <h3>Section Title with Global Toggle</h3>
             <div class="component-demo">
                 <div class="section-title-row">
                     <h2 class="section-title" style="margin-bottom: 0;">Refreshed: 24.01.2026 12:00</h2>
-                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
+                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand all</button>
                 </div>
             </div>
             
@@ -479,7 +479,7 @@
                 }
             });
             btn.dataset.expanded = !isExpanded;
-            btn.textContent = !isExpanded ? '\u25B2 collapse' : '\u25BC expand';
+            btn.textContent = !isExpanded ? '\u25B2 collapse all' : '\u25BC expand all';
         });
     })();
     </script>

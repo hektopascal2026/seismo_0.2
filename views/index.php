@@ -110,7 +110,7 @@
                         Search Results<?= $searchResultsCount !== null ? ' (' . $searchResultsCount . ')' : '' ?>
                         <span style="font-weight: 400; font-size: 18px; color: #666;">for "<?= htmlspecialchars($searchQuery) ?>"</span>
                     </h2>
-                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
+                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand all</button>
                 </div>
             <?php else: ?>
                 <div class="section-title-row">
@@ -121,7 +121,7 @@
                             Refreshed: Never
                         <?php endif; ?>
                     </h2>
-                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
+                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand all</button>
                 </div>
             <?php endif; ?>
             
@@ -289,7 +289,7 @@
                 }
             });
             btn.dataset.expanded = !isExpanded;
-            btn.textContent = !isExpanded ? '\u25B2 collapse' : '\u25BC expand';
+            btn.textContent = !isExpanded ? '\u25B2 collapse all' : '\u25BC expand all';
         });
     })();
     </script>
