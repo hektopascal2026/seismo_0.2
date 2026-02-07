@@ -145,7 +145,7 @@
 
         <!-- RSS Section -->
         <section class="settings-section">
-            <h2>RSS</h2>
+            <h2 style="background-color: #add8e6; padding: 8px 14px; display: inline-block;">RSS</h2>
             
             <!-- Add Feed Section -->
             <div class="add-feed-section" style="margin-bottom: 16px;">
@@ -157,8 +157,8 @@
             
             <!-- All Tags Section -->
             <?php if (!empty($allTags)): ?>
-                <div style="margin-bottom: 16px; padding: 12px; background-color: #ffffff;">
-                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #000000;">All Tags</h3>
+                <div style="margin-bottom: 12px;">
+                    <h3 style="margin-top: 0; margin-bottom: 6px;">All Tags</h3>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <?php foreach ($allTags as $tag): ?>
                             <div class="feed-tag-input-wrapper" style="display: inline-flex;">
@@ -230,12 +230,12 @@
 
         <!-- Mail Section -->
         <section class="settings-section">
-            <h2>Mail</h2>
+            <h2 style="background-color: #FFDBBB; padding: 8px 14px; display: inline-block;">Mail</h2>
             
             <!-- All Email Tags Section -->
             <?php if (!empty($allEmailTags)): ?>
-                <div style="margin-bottom: 16px; padding: 12px; background-color: #ffffff;">
-                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #000000;">All Tags</h3>
+                <div style="margin-bottom: 12px;">
+                    <h3 style="margin-top: 0; margin-bottom: 6px;">All Tags</h3>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <?php foreach ($allEmailTags as $tag): ?>
                             <div class="feed-tag-input-wrapper" style="display: inline-flex;">
@@ -306,12 +306,12 @@
 
         <!-- Substack Section -->
         <section class="settings-section">
-            <h2>Substack</h2>
+            <h2 style="background-color: #C5B4D1; padding: 8px 14px; display: inline-block;">Substack</h2>
             
             <!-- All Substack Tags Section -->
             <?php if (!empty($allSubstackTags)): ?>
-                <div style="margin-bottom: 16px; padding: 12px; background-color: #ffffff;">
-                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #000000;">All Tags</h3>
+                <div style="margin-bottom: 12px;">
+                    <h3 style="margin-top: 0; margin-bottom: 6px;">All Tags</h3>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <?php foreach ($allSubstackTags as $tag): ?>
                             <div class="feed-tag-input-wrapper" style="display: inline-flex;">

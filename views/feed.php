@@ -17,7 +17,7 @@
                 </svg>
                 Feed
             </a>
-            <a href="?action=feeds" class="nav-link active">RSS</a>
+            <a href="?action=feeds" class="nav-link active" style="background-color: #add8e6; color: #000000;">RSS</a>
             <a href="?action=mail" class="nav-link">Mail</a>
             <a href="?action=substack" class="nav-link">Substack</a>
             <a href="?action=settings" class="nav-link">Settings</a>

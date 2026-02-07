@@ -18,7 +18,7 @@
                 Feed
             </a>
             <a href="?action=feeds" class="nav-link">RSS</a>
-            <a href="?action=mail" class="nav-link active">Mail</a>
+            <a href="?action=mail" class="nav-link active" style="background-color: #FFDBBB; color: #000000;">Mail</a>
             <a href="?action=substack" class="nav-link">Substack</a>
             <a href="?action=settings" class="nav-link">Settings</a>
         </nav>
