@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="<?= getBasePath() ?>/assets/css/style.css">
     <style>
         .settings-section {
-            margin-bottom: 60px;
-            padding-bottom: 40px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
             border-bottom: 2px solid #000000;
         }
         
@@ -19,25 +19,25 @@
         .settings-section h2 {
             font-size: 28px;
             font-weight: 700;
-            margin-bottom: 30px;
+            margin-bottom: 16px;
             color: #000000;
         }
         
         .settings-list {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 10px;
         }
         
         .settings-item {
             border: 1px solid #000000;
-            padding: 20px;
+            padding: 12px 16px;
             background-color: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 10px;
         }
         
         .settings-item-info {
@@ -48,7 +48,7 @@
         .settings-item-title {
             font-size: 18px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             color: #000000;
         }
         
@@ -147,7 +147,7 @@
             <h2>RSS</h2>
             
             <!-- Add Feed Section -->
-            <div class="add-feed-section" style="margin-bottom: 30px;">
+            <div class="add-feed-section" style="margin-bottom: 16px;">
                 <form method="POST" action="?action=add_feed" class="add-feed-form">
                     <input type="url" name="url" placeholder="Enter RSS feed URL (e.g., https://example.com/feed.xml)" required class="feed-input">
                     <button type="submit" class="btn btn-primary">Add Feed</button>
@@ -156,9 +156,9 @@
             
             <!-- All Tags Section -->
             <?php if (!empty($allTags)): ?>
-                <div style="margin-bottom: 30px; padding: 20px; background-color: #ffffff;">
-                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #000000;">All Tags</h3>
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <div style="margin-bottom: 16px; padding: 12px; background-color: #ffffff;">
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #000000;">All Tags</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <?php foreach ($allTags as $tag): ?>
                             <div class="feed-tag-input-wrapper" style="display: inline-flex;">
                                 <input 
@@ -233,9 +233,9 @@
             
             <!-- All Email Tags Section -->
             <?php if (!empty($allEmailTags)): ?>
-                <div style="margin-bottom: 30px; padding: 20px; background-color: #ffffff;">
-                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #000000;">All Tags</h3>
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <div style="margin-bottom: 16px; padding: 12px; background-color: #ffffff;">
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #000000;">All Tags</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <?php foreach ($allEmailTags as $tag): ?>
                             <div class="feed-tag-input-wrapper" style="display: inline-flex;">
                                 <input 

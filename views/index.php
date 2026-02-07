@@ -30,7 +30,7 @@
                 </svg>
                 Seismo
             </h1>
-            <p class="subtitle">ein Prototyp von hektopascal.org | v0.2.2</p>
+            <p class="subtitle">ein Prototyp von hektopascal.org | v0.2.3</p>
         </header>
 
         <?php if (isset($_SESSION['success'])): ?>
@@ -56,7 +56,7 @@
 
                 <?php if (!empty($tags)): ?>
                     <div class="tag-filter-section">
-                        <div class="tag-filter-label" style="margin-bottom: 8px;">RSS Tags:</div>
+                        <div class="tag-filter-label">RSS Tags:</div>
                         <div class="tag-filter-list">
                             <?php foreach ($tags as $tag): ?>
                                 <?php 
@@ -78,8 +78,8 @@
                 <?php endif; ?>
                 
                 <?php if (!empty($emailTags)): ?>
-                    <div class="tag-filter-section" style="margin-top: 16px;">
-                        <div class="tag-filter-label" style="margin-bottom: 8px;">Email Tags:</div>
+                    <div class="tag-filter-section" style="margin-top: 8px;">
+                        <div class="tag-filter-label">Email Tags:</div>
                         <div class="tag-filter-list">
                             <?php foreach ($emailTags as $tag): ?>
                                 <?php 
