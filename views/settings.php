@@ -308,6 +308,28 @@
         <section class="settings-section">
             <h2>Substack</h2>
             
+            <!-- All Substack Tags Section -->
+            <?php if (!empty($allSubstackTags)): ?>
+                <div style="margin-bottom: 16px; padding: 12px; background-color: #ffffff;">
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #000000;">All Tags</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <?php foreach ($allSubstackTags as $tag): ?>
+                            <div class="feed-tag-input-wrapper" style="display: inline-flex;">
+                                <input 
+                                    type="text" 
+                                    class="feed-tag-input all-substack-tag-input" 
+                                    value="<?= htmlspecialchars($tag) ?>" 
+                                    data-original-tag="<?= htmlspecialchars($tag) ?>"
+                                    data-tag-name="<?= htmlspecialchars($tag, ENT_QUOTES) ?>"
+                                    style="width: auto; min-width: 100px; padding: 6px 12px;"
+                                >
+                                <span class="feed-tag-indicator"></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
             <?php if (empty($substackFeeds)): ?>
                 <div class="empty-state">
                     <p>No Substack subscriptions yet. <a href="?action=substack">Subscribe to a newsletter</a></p>
@@ -338,6 +360,19 @@
                                         Delete
                                     </a>
                                 </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <label style="font-weight: 600; font-size: 14px;">Tag:</label>
+                                    <div class="tag-input-wrapper">
+                                        <input 
+                                            type="text" 
+                                            class="tag-input feed-tag-input" 
+                                            value="<?= htmlspecialchars($feed['category'] ?? $feed['title']) ?>" 
+                                            data-feed-id="<?= $feed['id'] ?>"
+                                            data-original-tag="<?= htmlspecialchars($feed['category'] ?? $feed['title']) ?>"
+                                            style="width: 150px;"
+                                        >
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -351,6 +386,7 @@
         (function() {
             let allTags = [];
             let allEmailTags = [];
+            let allSubstackTags = [];
             let currentSuggestions = [];
             let activeInput = null;
             let suggestionList = null;
@@ -370,6 +406,14 @@
                     allEmailTags = tags;
                 })
                 .catch(err => console.error('Error loading email tags:', err));
+            
+            // Load all substack tags on page load
+            fetch('?action=api_substack_tags')
+                .then(response => response.json())
+                .then(tags => {
+                    allSubstackTags = tags;
+                })
+                .catch(err => console.error('Error loading substack tags:', err));
             
             // Create suggestion dropdown
             function createSuggestionList() {
@@ -413,8 +457,14 @@
             }
             
             // Filter tags based on input
-            function filterTags(query, useEmailTags = false) {
-                const tagsToSearch = useEmailTags ? allEmailTags : allTags;
+            function getTagSource(input) {
+                if (input && input.classList.contains('all-email-tag-input')) return allEmailTags;
+                if (input && input.classList.contains('all-substack-tag-input')) return allSubstackTags;
+                return allTags;
+            }
+            
+            function filterTags(query, input) {
+                const tagsToSearch = getTagSource(input);
                 if (!query || query === 'unsortiert') {
                     return [];
                 }
@@ -425,16 +475,16 @@
             }
             
             // Check if tag is new
-            function isNewTag(tag, useEmailTags = false) {
-                const tagsToSearch = useEmailTags ? allEmailTags : allTags;
+            function isNewTag(tag, input) {
+                const tagsToSearch = getTagSource(input);
                 return tag && tag !== 'unsortiert' && !tagsToSearch.includes(tag);
             }
             
             // Update indicator
-            function updateIndicator(input, value, useEmailTags = false) {
+            function updateIndicator(input, value) {
                 const indicator = input.parentElement.querySelector('.feed-tag-indicator');
                 if (indicator) {
-                    if (isNewTag(value, useEmailTags)) {
+                    if (isNewTag(value, input)) {
                         indicator.textContent = 'new';
                         indicator.className = 'feed-tag-indicator feed-tag-new';
                     } else {
@@ -444,26 +494,24 @@
                 }
             }
             
-            // Handle feed tag inputs (exclude all-tag-input and all-email-tag-input which have their own handlers)
-            document.querySelectorAll('.feed-tag-input:not(.all-tag-input):not(.all-email-tag-input)').forEach(input => {
+            // Handle feed tag inputs (exclude all-tag-input, all-email-tag-input, all-substack-tag-input which have their own handlers)
+            document.querySelectorAll('.feed-tag-input:not(.all-tag-input):not(.all-email-tag-input):not(.all-substack-tag-input)').forEach(input => {
                 input.addEventListener('focus', function() {
                     activeInput = this;
                     const value = this.value.trim();
-                    const useEmailTags = this.classList.contains('all-email-tag-input');
                     if (value && value !== 'unsortiert') {
-                        const suggestions = filterTags(value, useEmailTags);
+                        const suggestions = filterTags(value, this);
                         showSuggestions(this, suggestions);
                     }
-                    updateIndicator(this, value, useEmailTags);
+                    updateIndicator(this, value);
                 });
                 
                 input.addEventListener('input', function() {
                     const value = this.value.trim();
-                    const useEmailTags = this.classList.contains('all-email-tag-input');
-                    updateIndicator(this, value, useEmailTags);
+                    updateIndicator(this, value);
                     
                     if (value && value !== 'unsortiert') {
-                        const suggestions = filterTags(value, useEmailTags);
+                        const suggestions = filterTags(value, this);
                         showSuggestions(this, suggestions);
                     } else {
                         hideSuggestions();
@@ -508,16 +556,12 @@
                                 }, 2000);
                                 this.blur();
                                 hideSuggestions();
-                                return fetch('?action=api_tags');
+                                // Refresh both RSS and Substack tags
+                                fetch('?action=api_tags').then(r => r.json()).then(t => { allTags = t; });
+                                fetch('?action=api_substack_tags').then(r => r.json()).then(t => { allSubstackTags = t; });
                             } else {
                                 this.classList.remove('feed-tag-saving');
                                 alert('Error: ' + (data.error || 'Failed to update tag'));
-                            }
-                        })
-                        .then(response => response ? response.json() : null)
-                        .then(tags => {
-                            if (tags) {
-                                allTags = tags;
                             }
                         })
                         .catch(err => {
@@ -542,26 +586,24 @@
             });
         })();
         
-        // Handle "All Tags" editable inputs (both RSS and Email tags)
-        document.querySelectorAll('.all-tag-input, .all-email-tag-input').forEach(input => {
+        // Handle "All Tags" editable inputs (RSS, Email, and Substack tags)
+        document.querySelectorAll('.all-tag-input, .all-email-tag-input, .all-substack-tag-input').forEach(input => {
             input.addEventListener('focus', function() {
                 activeInput = this;
                 const value = this.value.trim();
-                const useEmailTags = this.classList.contains('all-email-tag-input');
                 if (value && value !== 'unsortiert') {
-                    const suggestions = filterTags(value, useEmailTags);
+                    const suggestions = filterTags(value, this);
                     showSuggestions(this, suggestions);
                 }
-                updateIndicator(this, value, useEmailTags);
+                updateIndicator(this, value);
             });
             
             input.addEventListener('input', function() {
                 const value = this.value.trim();
-                const useEmailTags = this.classList.contains('all-email-tag-input');
-                updateIndicator(this, value, useEmailTags);
+                updateIndicator(this, value);
                 
                 if (value && value !== 'unsortiert') {
-                    const suggestions = filterTags(value, useEmailTags);
+                    const suggestions = filterTags(value, this);
                     showSuggestions(this, suggestions);
                 } else {
                     hideSuggestions();
@@ -581,8 +623,7 @@
                     // Validation: cannot be empty
                     if (!value || value === '') {
                         this.value = this.dataset.originalTag;
-                        const useEmailTags = this.classList.contains('all-email-tag-input');
-                        updateIndicator(this, this.value, useEmailTags);
+                        updateIndicator(this, this.value);
                         hideSuggestions();
                         return;
                     }
@@ -594,10 +635,10 @@
                         return;
                     }
                     
-                    // Determine if this is an email tag or RSS tag
+                    // Determine tag type: email, substack, or RSS
                     const isEmailTag = this.classList.contains('all-email-tag-input');
-                    const action = isEmailTag ? 'rename_email_tag' : 'rename_tag';
-                    const apiAction = isEmailTag ? 'api_email_tags' : 'api_tags';
+                    const isSubstackTag = this.classList.contains('all-substack-tag-input');
+                    const action = isEmailTag ? 'rename_email_tag' : (isSubstackTag ? 'rename_substack_tag' : 'rename_tag');
                     
                     // Rename tag
                     const formData = new FormData();
@@ -626,24 +667,19 @@
                             this.blur();
                             hideSuggestions();
                             
-                            // Reload tags list
-                            return fetch('?action=' + apiAction);
+                            // Reload relevant tags list
+                            if (isEmailTag) {
+                                fetch('?action=api_email_tags').then(r => r.json()).then(t => { allEmailTags = t; });
+                            } else if (isSubstackTag) {
+                                fetch('?action=api_substack_tags').then(r => r.json()).then(t => { allSubstackTags = t; });
+                            } else {
+                                fetch('?action=api_tags').then(r => r.json()).then(t => { allTags = t; });
+                            }
                         } else {
                             this.classList.remove('feed-tag-saving');
                             alert('Error: ' + (data.error || 'Failed to rename tag'));
                             this.value = this.dataset.originalTag;
-                            const useEmailTags = this.classList.contains('all-email-tag-input');
-                            updateIndicator(this, this.value, useEmailTags);
-                        }
-                    })
-                    .then(response => response ? response.json() : null)
-                    .then(tags => {
-                        if (tags) {
-                            if (isEmailTag) {
-                                allEmailTags = tags;
-                            } else {
-                                allTags = tags;
-                            }
+                            updateIndicator(this, this.value);
                         }
                     })
                     .catch(err => {
@@ -651,13 +687,11 @@
                         this.classList.remove('feed-tag-saving');
                         alert('Error renaming tag');
                         this.value = this.dataset.originalTag;
-                        const useEmailTags = this.classList.contains('all-email-tag-input');
-                        updateIndicator(this, this.value, useEmailTags);
+                        updateIndicator(this, this.value);
                     });
                 } else if (e.key === 'Escape') {
                     this.value = this.dataset.originalTag;
-                    const useEmailTags = this.classList.contains('all-email-tag-input');
-                    updateIndicator(this, this.value, useEmailTags);
+                    updateIndicator(this, this.value);
                     hideSuggestions();
                     this.blur();
                 }

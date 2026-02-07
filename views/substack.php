@@ -46,6 +46,25 @@
             </form>
         </div>
 
+        <?php if (!empty($substackCategories)): ?>
+        <div class="category-filter-section">
+            <div class="category-filter">
+                <a href="?action=substack"
+                   class="category-btn <?= !$selectedSubstackCategory ? 'active' : '' ?>"
+                   <?= !$selectedSubstackCategory ? 'style="background-color: #add8e6;"' : '' ?>>
+                    All
+                </a>
+                <?php foreach ($substackCategories as $category): ?>
+                    <a href="?action=substack&category=<?= urlencode($category) ?>"
+                       class="category-btn <?= $selectedSubstackCategory === $category ? 'active' : '' ?>"
+                       <?= $selectedSubstackCategory === $category ? 'style="background-color: #add8e6;"' : '' ?>>
+                        <?= htmlspecialchars($category) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="latest-entries-section">
             <div class="section-title-row">
                 <h2 class="section-title">
@@ -60,7 +79,11 @@
 
             <?php if (empty($substackItems)): ?>
                 <div class="empty-state">
-                    <p>No Substack posts yet. Subscribe to a newsletter above to see posts here.</p>
+                    <?php if ($selectedSubstackCategory): ?>
+                        <p>No entries found in "<?= htmlspecialchars($selectedSubstackCategory) ?>". <a href="?action=substack">View all entries</a></p>
+                    <?php else: ?>
+                        <p>No Substack posts yet. Subscribe to a newsletter above to see posts here.</p>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <?php foreach ($substackItems as $item): ?>
@@ -101,7 +124,7 @@
     </div>
     
     <!-- Floating Refresh Button -->
-    <a href="?action=refresh_all_substacks" class="floating-refresh-btn" title="Refresh all Substack feeds">Refresh</a>
+    <a href="?action=refresh_all_substacks<?= $selectedSubstackCategory ? '&category=' . urlencode($selectedSubstackCategory) : '' ?>" class="floating-refresh-btn" title="Refresh all Substack feeds">Refresh</a>
 
     <script>
     (function() {

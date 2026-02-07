@@ -529,14 +529,33 @@ switch ($action) {
     
     case 'substack':
         // Show Substack entries page
-        $stmt = $pdo->query("
-            SELECT fi.*, f.title as feed_title
-            FROM feed_items fi
-            JOIN feeds f ON fi.feed_id = f.id
-            WHERE f.source_type = 'substack' AND f.disabled = 0
-            ORDER BY fi.published_date DESC, fi.cached_at DESC
-            LIMIT 50
-        ");
+        $selectedSubstackCategory = $_GET['category'] ?? null;
+        
+        // Get all unique categories from Substack feeds
+        $substackCategoriesStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE source_type = 'substack' AND category IS NOT NULL AND category != '' ORDER BY category");
+        $substackCategories = $substackCategoriesStmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Get Substack entries (filtered by category if selected)
+        if ($selectedSubstackCategory) {
+            $stmt = $pdo->prepare("
+                SELECT fi.*, f.title as feed_title
+                FROM feed_items fi
+                JOIN feeds f ON fi.feed_id = f.id
+                WHERE f.source_type = 'substack' AND f.disabled = 0 AND f.category = ?
+                ORDER BY fi.published_date DESC, fi.cached_at DESC
+                LIMIT 50
+            ");
+            $stmt->execute([$selectedSubstackCategory]);
+        } else {
+            $stmt = $pdo->query("
+                SELECT fi.*, f.title as feed_title
+                FROM feed_items fi
+                JOIN feeds f ON fi.feed_id = f.id
+                WHERE f.source_type = 'substack' AND f.disabled = 0
+                ORDER BY fi.published_date DESC, fi.cached_at DESC
+                LIMIT 50
+            ");
+        }
         $substackItems = $stmt->fetchAll();
         
         // Get last refresh date for substack feeds
@@ -614,7 +633,14 @@ switch ($action) {
         
     case 'api_tags':
         header('Content-Type: application/json');
-        $stmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' ORDER BY category");
+        $stmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' AND (source_type = 'rss' OR source_type IS NULL) ORDER BY category");
+        $tags = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        echo json_encode($tags);
+        break;
+    
+    case 'api_substack_tags':
+        header('Content-Type: application/json');
+        $stmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' AND source_type = 'substack' ORDER BY category");
         $tags = $stmt->fetchAll(PDO::FETCH_COLUMN);
         echo json_encode($tags);
         break;
@@ -650,6 +676,10 @@ switch ($action) {
         // Get all unique tags from RSS feeds
         $tagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' AND (source_type = 'rss' OR source_type IS NULL) ORDER BY category");
         $allTags = $tagsStmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Get all unique Substack tags
+        $substackTagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE source_type = 'substack' AND category IS NOT NULL AND category != '' ORDER BY category");
+        $allSubstackTags = $substackTagsStmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Get all unique email tags (excluding unclassified and removed senders)
         $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' AND removed_at IS NULL ORDER BY tag");
@@ -805,6 +835,10 @@ switch ($action) {
         handleRenameTag($pdo);
         break;
         
+    case 'rename_substack_tag':
+        handleRenameSubstackTag($pdo);
+        break;
+    
     case 'rename_email_tag':
         handleRenameEmailTag($pdo);
         break;
@@ -920,13 +954,15 @@ function handleAddSubstack($pdo) {
         return;
     }
     
-    // Insert feed as substack type
-    $stmt = $pdo->prepare("INSERT INTO feeds (url, source_type, title, description, link, category) VALUES (?, 'substack', ?, ?, ?, 'substack')");
+    // Insert feed as substack type — default tag is the newsletter title
+    $feedTitle = $feed->get_title() ?: 'Untitled Substack';
+    $stmt = $pdo->prepare("INSERT INTO feeds (url, source_type, title, description, link, category) VALUES (?, 'substack', ?, ?, ?, ?)");
     $stmt->execute([
         $feedUrl,
-        $feed->get_title() ?: 'Untitled Substack',
+        $feedTitle,
         $feed->get_description() ?: '',
-        $feed->get_link() ?: $url
+        $feed->get_link() ?: $url,
+        $feedTitle
     ]);
     
     $feedId = $pdo->lastInsertId();
@@ -1509,8 +1545,33 @@ function handleRenameTag($pdo) {
         return;
     }
     
-    // Update all feeds with the old tag to the new tag
-    $stmt = $pdo->prepare("UPDATE feeds SET category = ? WHERE category = ?");
+    // Update RSS feeds only (not substack) with the old tag to the new tag
+    $stmt = $pdo->prepare("UPDATE feeds SET category = ? WHERE category = ? AND (source_type = 'rss' OR source_type IS NULL)");
+    $stmt->execute([$newTag, $oldTag]);
+    
+    $affectedRows = $stmt->rowCount();
+    
+    echo json_encode(['success' => true, 'affected' => $affectedRows]);
+}
+
+function handleRenameSubstackTag($pdo) {
+    header('Content-Type: application/json');
+    
+    $oldTag = trim($_POST['old_tag'] ?? '');
+    $newTag = trim($_POST['new_tag'] ?? '');
+    
+    if (empty($oldTag) || empty($newTag)) {
+        echo json_encode(['success' => false, 'error' => 'Both old and new tag names are required']);
+        return;
+    }
+    
+    if ($oldTag === $newTag) {
+        echo json_encode(['success' => false, 'error' => 'New tag name must be different from old tag name']);
+        return;
+    }
+    
+    // Update substack feeds only with the old tag to the new tag
+    $stmt = $pdo->prepare("UPDATE feeds SET category = ? WHERE category = ? AND source_type = 'substack'");
     $stmt->execute([$newTag, $oldTag]);
     
     $affectedRows = $stmt->rowCount();

@@ -11,7 +11,7 @@
         <!-- Navigation Menu -->
         <nav class="main-nav">
             <a href="?action=index" class="nav-link active">
-                <svg class="logo-icon logo-icon-nav" width="48" height="32" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg">
+                <svg class="logo-icon" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg">
                     <rect width="24" height="16" fill="#FFFFC5"/>
                     <path d="M0,8 L4,12 L6,4 L10,10 L14,2 L18,8 L20,6 L24,8" stroke="#000000" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
