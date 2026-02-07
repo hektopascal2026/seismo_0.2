@@ -43,7 +43,7 @@ switch ($action) {
             $searchEmails = searchEmails($pdo, $searchQuery, 100, $selectedEmailTags);
             $searchResultsCount = count($latestItems) + count($searchEmails);
         } else {
-            // Get latest 30 items from enabled feeds only, optionally filtered by tags
+            // Get latest 30 items from enabled feeds only, filtered by tags
             if (!empty($selectedTags)) {
                 $placeholders = implode(',', array_fill(0, count($selectedTags), '?'));
                 $sql = "
@@ -58,7 +58,8 @@ switch ($action) {
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($selectedTags);
                 $latestItems = $stmt->fetchAll();
-            } else {
+            } elseif (!$tagsSubmitted) {
+                // First visit with no form submission: show all
                 $latestItemsStmt = $pdo->query("
                     SELECT fi.*, f.title as feed_title 
                     FROM feed_items fi
@@ -68,6 +69,9 @@ switch ($action) {
                     LIMIT 30
                 ");
                 $latestItems = $latestItemsStmt->fetchAll();
+            } else {
+                // User explicitly deselected all tags: show nothing
+                $latestItems = [];
             }
             $searchResultsCount = null;
         }
@@ -76,7 +80,15 @@ switch ($action) {
         if (!empty($searchQuery)) {
             $emails = $searchEmails;
         } else {
-            $emails = getEmailsForIndex($pdo, 30, $selectedEmailTags);
+            if (!empty($selectedEmailTags)) {
+                $emails = getEmailsForIndex($pdo, 30, $selectedEmailTags);
+            } elseif (!$tagsSubmitted) {
+                // First visit: show all emails
+                $emails = getEmailsForIndex($pdo, 30, []);
+            } else {
+                // User explicitly deselected all email tags: show nothing
+                $emails = [];
+            }
         }
         
         // Merge and sort by date
