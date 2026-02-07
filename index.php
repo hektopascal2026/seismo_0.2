@@ -51,6 +51,7 @@ switch ($action) {
                     FROM feed_items fi
                     JOIN feeds f ON fi.feed_id = f.id
                     WHERE f.disabled = 0
+                      AND (f.source_type = 'rss' OR f.source_type IS NULL)
                       AND f.category IN ($placeholders)
                     ORDER BY fi.published_date DESC, fi.cached_at DESC
                     LIMIT 30
@@ -65,6 +66,7 @@ switch ($action) {
                     FROM feed_items fi
                     JOIN feeds f ON fi.feed_id = f.id
                     WHERE f.disabled = 0
+                      AND (f.source_type = 'rss' OR f.source_type IS NULL)
                     ORDER BY fi.published_date DESC, fi.cached_at DESC
                     LIMIT 30
                 ");
