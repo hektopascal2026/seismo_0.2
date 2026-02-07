@@ -5,7 +5,7 @@
 define('DB_HOST', 'localhost:3306');
 define('DB_NAME', '8879_');
 define('DB_USER', 'seismo');
-define('DB_PASS', 'PW');
+define('DB_PASS', 'Hektopascal-p07');
 
 /**
  * Application Settings
