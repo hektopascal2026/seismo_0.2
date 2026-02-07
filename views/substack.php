@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mail - Seismo</title>
+    <title>Substack - Seismo</title>
     <link rel="stylesheet" href="<?= getBasePath() ?>/assets/css/style.css">
 </head>
 <body>
@@ -18,14 +18,14 @@
                 Feed
             </a>
             <a href="?action=feeds" class="nav-link">RSS</a>
-            <a href="?action=mail" class="nav-link active">Mail</a>
-            <a href="?action=substack" class="nav-link">Substack</a>
+            <a href="?action=mail" class="nav-link">Mail</a>
+            <a href="?action=substack" class="nav-link active">Substack</a>
             <a href="?action=settings" class="nav-link">Settings</a>
         </nav>
 
         <header>
-            <h1>Mail</h1>
-            <p class="subtitle">Mail management</p>
+            <h1>Substack</h1>
+            <p class="subtitle">Substack newsletters</p>
         </header>
 
         <?php if (isset($_SESSION['success'])): ?>
@@ -38,30 +38,19 @@
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-        <?php if (!empty($emailTags) || isset($selectedEmailTag)): ?>
-        <div class="category-filter-section">
-            <div class="category-filter">
-                <a href="?action=mail"
-                   class="category-btn <?= !$selectedEmailTag ? 'active' : '' ?>"
-                   <?= !$selectedEmailTag ? 'style="background-color: #FFDBBB;"' : '' ?>>
-                    All Emails
-                </a>
-                <?php foreach ($emailTags as $tag): ?>
-                    <a href="?action=mail&email_tag=<?= urlencode($tag) ?>"
-                       class="category-btn <?= $selectedEmailTag === $tag ? 'active' : '' ?>"
-                       <?= $selectedEmailTag === $tag ? 'style="background-color: #FFDBBB;"' : '' ?>>
-                        <?= htmlspecialchars($tag) ?>
-                    </a>
-                <?php endforeach; ?>
-            </div>
+        <!-- Add Substack Section -->
+        <div class="add-feed-section">
+            <form method="POST" action="?action=add_substack" class="add-feed-form">
+                <input type="text" name="url" placeholder="Enter Substack URL (e.g., example.substack.com)" required class="feed-input">
+                <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
         </div>
-        <?php endif; ?>
 
         <div class="latest-entries-section">
             <div class="section-title-row">
                 <h2 class="section-title">
-                    <?php if (!empty($lastMailRefreshDate)): ?>
-                        Refreshed: <?= htmlspecialchars($lastMailRefreshDate) ?>
+                    <?php if ($lastSubstackRefreshDate): ?>
+                        Refreshed: <?= htmlspecialchars($lastSubstackRefreshDate) ?>
                     <?php else: ?>
                         Refreshed: Never
                     <?php endif; ?>
@@ -69,68 +58,50 @@
                 <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand all</button>
             </div>
 
-            <?php if (!empty($mailTableError)): ?>
-                <div class="message message-error">
-                    <strong>Error:</strong> <?= htmlspecialchars($mailTableError) ?>
+            <?php if (empty($substackItems)): ?>
+                <div class="empty-state">
+                    <p>No Substack posts yet. Subscribe to a newsletter above to see posts here.</p>
                 </div>
-            <?php endif; ?>
-
-            <?php if (!empty($emails)): ?>
-                <?php foreach ($emails as $email): ?>
+            <?php else: ?>
+                <?php foreach ($substackItems as $item): ?>
                     <?php
-                        $dateValue = $email['date_received'] ?? $email['date_utc'] ?? $email['created_at'] ?? $email['date_sent'] ?? null;
-                        $createdAt = $dateValue ? date('d.m.Y H:i', strtotime($dateValue)) : '';
-                        
-                        $fromName = trim((string)($email['from_name'] ?? ''));
-                        $fromEmail = trim((string)($email['from_email'] ?? ''));
-                        $fromDisplay = $fromName !== '' ? $fromName : ($fromEmail !== '' ? $fromEmail : 'Unknown sender');
-
-                        $subject = trim((string)($email['subject'] ?? ''));
-                        if ($subject === '') $subject = '(No subject)';
-
-                        $body = (string)($email['text_body'] ?? '');
-                        if ($body === '') {
-                            $body = strip_tags((string)($email['html_body'] ?? ''));
-                        }
-                        $body = trim(preg_replace('/\s+/', ' ', $body ?? ''));
-                        $bodyPreview = mb_substr($body, 0, 400);
-                        if (mb_strlen($body) > 400) $bodyPreview .= '...';
-                        $hasMore = mb_strlen($body) > 400;
+                        $fullContent = strip_tags($item['content'] ?: $item['description']);
+                        $contentPreview = mb_substr($fullContent, 0, 200);
+                        if (mb_strlen($fullContent) > 200) $contentPreview .= '...';
+                        $hasMore = mb_strlen($fullContent) > 200;
                     ?>
-
                     <div class="entry-card">
                         <div class="entry-header">
-                            <span class="entry-feed"><?= htmlspecialchars($fromDisplay) ?></span>
-                            <span class="entry-date"><?= htmlspecialchars($createdAt) ?></span>
+                            <span class="entry-feed"><?= htmlspecialchars($item['feed_title']) ?></span>
+                            <?php if ($item['published_date']): ?>
+                                <span class="entry-date"><?= date('d.m.Y H:i', strtotime($item['published_date'])) ?></span>
+                            <?php endif; ?>
                         </div>
-                        <h3 class="entry-title"><?= htmlspecialchars($subject) ?></h3>
-                        <div class="entry-content entry-preview"><?= htmlspecialchars($bodyPreview) ?></div>
-                        <div class="entry-full-content" style="display:none"><?= htmlspecialchars($body) ?></div>
+                        <h3 class="entry-title">
+                            <a href="<?= htmlspecialchars($item['link']) ?>" target="_blank" rel="noopener">
+                                <?= htmlspecialchars($item['title']) ?>
+                            </a>
+                        </h3>
+                        <?php if ($item['description'] || $item['content']): ?>
+                            <div class="entry-content entry-preview"><?= htmlspecialchars($contentPreview) ?></div>
+                            <div class="entry-full-content" style="display:none"><?= htmlspecialchars($fullContent) ?></div>
+                        <?php endif; ?>
                         <div class="entry-actions">
+                            <?php if ($item['link']): ?>
+                                <a href="<?= htmlspecialchars($item['link']) ?>" target="_blank" rel="noopener" class="entry-link">Read more →</a>
+                            <?php endif; ?>
                             <?php if ($hasMore): ?>
                                 <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
-                            <?php endif; ?>
-                            <?php if (isset($email['id'])): ?>
-                                <a href="?action=delete_email&id=<?= (int)$email['id'] ?>&confirm=yes" 
-                                   class="btn btn-danger" 
-                                   onclick="return confirm('Are you sure you want to delete this email? This action cannot be undone.');"
-                                   style="font-size: 14px; padding: 8px 16px;">
-                                    Delete Email
-                                </a>
                             <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
-            <?php else: ?>
-                <div class="empty-state">
-                    <p>No emails yet.</p>
-                </div>
             <?php endif; ?>
         </div>
     </div>
     
     <!-- Floating Refresh Button -->
-    <a href="?action=refresh_emails&from=mail" class="floating-refresh-btn" title="Refresh emails">Refresh</a>
+    <a href="?action=refresh_all_substacks" class="floating-refresh-btn" title="Refresh all Substack feeds">Refresh</a>
 
     <script>
     (function() {

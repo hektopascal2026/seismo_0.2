@@ -19,6 +19,7 @@
             </a>
             <a href="?action=feeds" class="nav-link">RSS</a>
             <a href="?action=mail" class="nav-link">Mail</a>
+            <a href="?action=substack" class="nav-link">Substack</a>
             <a href="?action=settings" class="nav-link">Settings</a>
         </nav>
 
@@ -127,7 +128,7 @@
             
             <?php if (!empty($allItems)): ?>
                 <?php foreach ($allItems as $itemWrapper): ?>
-                    <?php if ($itemWrapper['type'] === 'feed'): ?>
+                    <?php if ($itemWrapper['type'] === 'feed' || $itemWrapper['type'] === 'substack'): ?>
                         <?php $item = $itemWrapper['data']; ?>
                         <?php
                             $fullContent = strip_tags($item['content'] ?: $item['description']);

@@ -124,6 +124,7 @@
             </a>
             <a href="?action=feeds" class="nav-link">RSS</a>
             <a href="?action=mail" class="nav-link">Mail</a>
+            <a href="?action=substack" class="nav-link">Substack</a>
             <a href="?action=settings" class="nav-link active">Settings</a>
         </nav>
 
@@ -295,6 +296,47 @@
                                             style="width: 150px;"
                                         >
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </section>
+
+        <!-- Substack Section -->
+        <section class="settings-section">
+            <h2>Substack</h2>
+            
+            <?php if (empty($substackFeeds)): ?>
+                <div class="empty-state">
+                    <p>No Substack subscriptions yet. <a href="?action=substack">Subscribe to a newsletter</a></p>
+                </div>
+            <?php else: ?>
+                <div class="settings-list">
+                    <?php foreach ($substackFeeds as $feed): ?>
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <div class="settings-item-title"><?= htmlspecialchars($feed['title']) ?></div>
+                                <?php if (!empty($feed['description'])): ?>
+                                    <div class="settings-item-meta"><?= htmlspecialchars($feed['description']) ?></div>
+                                <?php endif; ?>
+                                <div class="settings-item-meta"><?= htmlspecialchars($feed['url']) ?></div>
+                                <?php if ($feed['last_fetched']): ?>
+                                    <div class="settings-item-meta">Last updated: <?= date('d.m.Y H:i', strtotime($feed['last_fetched'])) ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="settings-item-actions" style="flex-direction: column; align-items: flex-end; gap: 10px;">
+                                <div style="display: flex; gap: 10px;">
+                                    <a href="?action=toggle_feed&id=<?= $feed['id'] ?>&from=settings" class="btn <?= $feed['disabled'] ? 'btn-success' : 'btn-warning' ?>" style="font-size: 14px; padding: 8px 16px;">
+                                        <?= $feed['disabled'] ? 'Enable' : 'Disable' ?>
+                                    </a>
+                                    <a href="?action=delete_feed&id=<?= $feed['id'] ?>&from=settings" 
+                                       class="btn btn-danger" 
+                                       onclick="return confirm('Are you sure you want to unsubscribe from this Substack?');"
+                                       style="font-size: 14px; padding: 8px 16px;">
+                                        Delete
+                                    </a>
                                 </div>
                             </div>
                         </div>

@@ -17,8 +17,8 @@ switch ($action) {
         // Show main page with entries only (no feeds section)
         $searchQuery = trim($_GET['q'] ?? '');
 
-        // Get all unique tags (categories) from RSS feeds
-        $tagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' ORDER BY category");
+        // Get all unique tags (categories) from RSS feeds only (not Substack)
+        $tagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' AND (source_type = 'rss' OR source_type IS NULL) ORDER BY category");
         $tags = $tagsStmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Get all unique email tags (excluding unclassified)
@@ -91,14 +91,35 @@ switch ($action) {
             }
         }
         
+        // Fetch Substack items for the main timeline
+        $substackItemsStmt = $pdo->query("
+            SELECT fi.*, f.title as feed_title
+            FROM feed_items fi
+            JOIN feeds f ON fi.feed_id = f.id
+            WHERE f.source_type = 'substack' AND f.disabled = 0
+            ORDER BY fi.published_date DESC, fi.cached_at DESC
+            LIMIT 30
+        ");
+        $substackItems = $substackItemsStmt->fetchAll();
+        
         // Merge and sort by date
         $allItems = [];
         
-        // Add feed items
+        // Add feed items (RSS)
         foreach ($latestItems as $item) {
             $dateValue = $item['published_date'] ?? $item['cached_at'] ?? null;
             $allItems[] = [
                 'type' => 'feed',
+                'date' => $dateValue ? strtotime($dateValue) : 0,
+                'data' => $item
+            ];
+        }
+        
+        // Add Substack items
+        foreach ($substackItems as $item) {
+            $dateValue = $item['published_date'] ?? $item['cached_at'] ?? null;
+            $allItems[] = [
+                'type' => 'substack',
                 'date' => $dateValue ? strtotime($dateValue) : 0,
                 'data' => $item
             ];
@@ -207,19 +228,19 @@ switch ($action) {
         $selectedCategory = $_GET['category'] ?? null;
         
         // Set default category "unsortiert" for feeds without category
-        $pdo->exec("UPDATE feeds SET category = 'unsortiert' WHERE category IS NULL OR category = ''");
+        $pdo->exec("UPDATE feeds SET category = 'unsortiert' WHERE (category IS NULL OR category = '') AND (source_type = 'rss' OR source_type IS NULL)");
         
-        // Get all unique categories
-        $categoriesStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' ORDER BY category");
+        // Get all unique categories (RSS feeds only)
+        $categoriesStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' AND (source_type = 'rss' OR source_type IS NULL) ORDER BY category");
         $categories = $categoriesStmt->fetchAll(PDO::FETCH_COLUMN);
         
-        // Get RSS entries (from enabled feeds, filtered by category if selected)
+        // Get RSS entries (from enabled RSS feeds only, filtered by category if selected)
         if ($selectedCategory) {
             $stmt = $pdo->prepare("
                 SELECT fi.*, f.title as feed_title
                 FROM feed_items fi
                 JOIN feeds f ON fi.feed_id = f.id
-                WHERE f.disabled = 0 AND f.category = ?
+                WHERE f.disabled = 0 AND (f.source_type = 'rss' OR f.source_type IS NULL) AND f.category = ?
                 ORDER BY fi.published_date DESC, fi.cached_at DESC
                 LIMIT 50
             ");
@@ -229,15 +250,15 @@ switch ($action) {
                 SELECT fi.*, f.title as feed_title
                 FROM feed_items fi
                 JOIN feeds f ON fi.feed_id = f.id
-                WHERE f.disabled = 0
+                WHERE f.disabled = 0 AND (f.source_type = 'rss' OR f.source_type IS NULL)
                 ORDER BY fi.published_date DESC, fi.cached_at DESC
                 LIMIT 50
             ");
         }
         $rssItems = $stmt->fetchAll();
         
-        // Get last feed refresh date/time
-        $lastRefreshStmt = $pdo->query("SELECT MAX(last_fetched) as last_refresh FROM feeds WHERE last_fetched IS NOT NULL");
+        // Get last feed refresh date/time (RSS only)
+        $lastRefreshStmt = $pdo->query("SELECT MAX(last_fetched) as last_refresh FROM feeds WHERE (source_type = 'rss' OR source_type IS NULL) AND last_fetched IS NOT NULL");
         $lastRefreshRow = $lastRefreshStmt->fetch();
         $lastRssRefreshDate = $lastRefreshRow['last_refresh'] ? date('d.m.Y H:i', strtotime($lastRefreshRow['last_refresh'])) : null;
         
@@ -505,6 +526,41 @@ switch ($action) {
         
         include 'views/mail.php';
         break;
+    
+    case 'substack':
+        // Show Substack entries page
+        $stmt = $pdo->query("
+            SELECT fi.*, f.title as feed_title
+            FROM feed_items fi
+            JOIN feeds f ON fi.feed_id = f.id
+            WHERE f.source_type = 'substack' AND f.disabled = 0
+            ORDER BY fi.published_date DESC, fi.cached_at DESC
+            LIMIT 50
+        ");
+        $substackItems = $stmt->fetchAll();
+        
+        // Get last refresh date for substack feeds
+        $lastRefreshStmt = $pdo->query("SELECT MAX(last_fetched) as last_refresh FROM feeds WHERE source_type = 'substack' AND last_fetched IS NOT NULL");
+        $lastRefreshRow = $lastRefreshStmt->fetch();
+        $lastSubstackRefreshDate = $lastRefreshRow['last_refresh'] ? date('d.m.Y H:i', strtotime($lastRefreshRow['last_refresh'])) : null;
+        
+        include 'views/substack.php';
+        break;
+    
+    case 'add_substack':
+        handleAddSubstack($pdo);
+        break;
+    
+    case 'refresh_all_substacks':
+        // Refresh only substack feeds
+        $stmt = $pdo->query("SELECT id FROM feeds WHERE source_type = 'substack' ORDER BY id");
+        $substackFeeds = $stmt->fetchAll();
+        foreach ($substackFeeds as $feed) {
+            refreshFeed($pdo, $feed['id']);
+        }
+        $_SESSION['success'] = 'All Substack feeds refreshed successfully';
+        header('Location: ?action=substack');
+        break;
         
     case 'add_feed':
         handleAddFeed($pdo);
@@ -583,12 +639,16 @@ switch ($action) {
         // Show settings page
         $pdo = getDbConnection();
         
-        // Get all feeds for RSS section
-        $feedsStmt = $pdo->query("SELECT * FROM feeds ORDER BY created_at DESC");
+        // Get all RSS feeds for RSS section
+        $feedsStmt = $pdo->query("SELECT * FROM feeds WHERE source_type = 'rss' OR source_type IS NULL ORDER BY created_at DESC");
         $allFeeds = $feedsStmt->fetchAll();
         
-        // Get all unique tags from feeds
-        $tagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' ORDER BY category");
+        // Get Substack feeds for Substack section
+        $substackFeedsStmt = $pdo->query("SELECT * FROM feeds WHERE source_type = 'substack' ORDER BY created_at DESC");
+        $substackFeeds = $substackFeedsStmt->fetchAll();
+        
+        // Get all unique tags from RSS feeds
+        $tagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' AND (source_type = 'rss' OR source_type IS NULL) ORDER BY category");
         $allTags = $tagsStmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Get all unique email tags (excluding unclassified and removed senders)
@@ -815,6 +875,67 @@ function handleAddFeed($pdo) {
     
     $_SESSION['success'] = 'Feed added successfully';
     header('Location: ?action=feeds');
+}
+
+function handleAddSubstack($pdo) {
+    $url = trim(filter_input(INPUT_POST, 'url', FILTER_SANITIZE_URL) ?? '');
+    
+    if (!$url) {
+        $_SESSION['error'] = 'Please provide a Substack URL';
+        header('Location: ?action=substack');
+        return;
+    }
+    
+    // Normalize URL: accept "name.substack.com" or "https://name.substack.com" etc.
+    if (!preg_match('#^https?://#', $url)) {
+        $url = 'https://' . $url;
+    }
+    
+    // Strip trailing slashes and /feed suffix if user pasted that
+    $url = rtrim($url, '/');
+    $url = preg_replace('#/feed$#', '', $url);
+    
+    // Build the RSS feed URL
+    $feedUrl = $url . '/feed';
+    
+    // Parse feed to validate and get info
+    $feed = new \SimplePie\SimplePie();
+    $feed->set_feed_url($feedUrl);
+    $feed->enable_cache(false);
+    $feed->init();
+    $feed->handle_content_type();
+    
+    if ($feed->error()) {
+        $_SESSION['error'] = 'Could not load Substack feed. Make sure the URL is correct (e.g. https://example.substack.com).';
+        header('Location: ?action=substack');
+        return;
+    }
+    
+    // Check if feed already exists
+    $stmt = $pdo->prepare("SELECT id FROM feeds WHERE url = ?");
+    $stmt->execute([$feedUrl]);
+    if ($stmt->fetch()) {
+        $_SESSION['error'] = 'This Substack is already subscribed';
+        header('Location: ?action=substack');
+        return;
+    }
+    
+    // Insert feed as substack type
+    $stmt = $pdo->prepare("INSERT INTO feeds (url, source_type, title, description, link, category) VALUES (?, 'substack', ?, ?, ?, 'substack')");
+    $stmt->execute([
+        $feedUrl,
+        $feed->get_title() ?: 'Untitled Substack',
+        $feed->get_description() ?: '',
+        $feed->get_link() ?: $url
+    ]);
+    
+    $feedId = $pdo->lastInsertId();
+    
+    // Fetch and cache items
+    cacheFeedItems($pdo, $feedId, $feed);
+    
+    $_SESSION['success'] = 'Substack added successfully: ' . ($feed->get_title() ?: $url);
+    header('Location: ?action=substack');
 }
 
 function handleDeleteFeed($pdo) {

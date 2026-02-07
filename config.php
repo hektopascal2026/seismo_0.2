@@ -91,6 +91,15 @@ function initDatabase() {
         // Index might already exist, ignore error
     }
     
+    // Add source_type column if it doesn't exist (for Substack support)
+    try {
+        $pdo->exec("ALTER TABLE feeds ADD COLUMN source_type VARCHAR(20) DEFAULT 'rss' AFTER url");
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'Duplicate column name') === false) {
+            throw $e;
+        }
+    }
+    
     // Create feed_items table
     $pdo->exec("CREATE TABLE IF NOT EXISTS feed_items (
         id INT AUTO_INCREMENT PRIMARY KEY,
