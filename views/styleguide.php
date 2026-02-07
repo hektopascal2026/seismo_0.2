@@ -199,6 +199,9 @@
                 <div class="color-swatch" style="background-color: #FFDBBB;">
                     <div class="color-swatch-info">#FFDBBB<br>Email Tags</div>
                 </div>
+                <div class="color-swatch" style="background-color: #C5B4D1;">
+                    <div class="color-swatch-info">#C5B4D1<br>Substack Tags</div>
+                </div>
             </div>
         </section>
 

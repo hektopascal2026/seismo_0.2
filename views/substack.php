@@ -51,13 +51,13 @@
             <div class="category-filter">
                 <a href="?action=substack"
                    class="category-btn <?= !$selectedSubstackCategory ? 'active' : '' ?>"
-                   <?= !$selectedSubstackCategory ? 'style="background-color: #add8e6;"' : '' ?>>
+                   <?= !$selectedSubstackCategory ? 'style="background-color: #C5B4D1;"' : '' ?>>
                     All
                 </a>
                 <?php foreach ($substackCategories as $category): ?>
                     <a href="?action=substack&category=<?= urlencode($category) ?>"
                        class="category-btn <?= $selectedSubstackCategory === $category ? 'active' : '' ?>"
-                       <?= $selectedSubstackCategory === $category ? 'style="background-color: #add8e6;"' : '' ?>>
+                       <?= $selectedSubstackCategory === $category ? 'style="background-color: #C5B4D1;"' : '' ?>>
                         <?= htmlspecialchars($category) ?>
                     </a>
                 <?php endforeach; ?>
