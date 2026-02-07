@@ -55,45 +55,27 @@
                     <a href="?action=index" class="btn btn-secondary">Clear</a>
                 <?php endif; ?>
 
-                <?php if (!empty($tags)): ?>
+                <?php if (!empty($tags) || !empty($emailTags) || !empty($substackTags)): ?>
                     <div class="tag-filter-section">
-                        <div class="tag-filter-label">RSS Tags:</div>
                         <div class="tag-filter-list">
                             <?php foreach ($tags as $tag): ?>
-                                <?php 
-                                    $isSelected = !empty($selectedTags) && in_array($tag, $selectedTags, true);
-                                ?>
+                                <?php $isSelected = !empty($selectedTags) && in_array($tag, $selectedTags, true); ?>
                                 <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>"<?= $isSelected ? ' style="background-color: #add8e6;"' : '' ?>>
-                                    <input 
-                                        type="checkbox" 
-                                        name="tags[]" 
-                                        value="<?= htmlspecialchars($tag) ?>" 
-                                        <?= $isSelected ? 'checked' : '' ?>
-                                        onchange="this.form.submit()"
-                                    >
+                                    <input type="checkbox" name="tags[]" value="<?= htmlspecialchars($tag) ?>" <?= $isSelected ? 'checked' : '' ?> onchange="this.form.submit()">
                                     <span><?= htmlspecialchars($tag) ?></span>
                                 </label>
                             <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-                
-                <?php if (!empty($emailTags)): ?>
-                    <div class="tag-filter-section" style="margin-top: 8px;">
-                        <div class="tag-filter-label">Email Tags:</div>
-                        <div class="tag-filter-list">
                             <?php foreach ($emailTags as $tag): ?>
-                                <?php 
-                                    $isSelected = !empty($selectedEmailTags) && in_array($tag, $selectedEmailTags, true);
-                                ?>
+                                <?php $isSelected = !empty($selectedEmailTags) && in_array($tag, $selectedEmailTags, true); ?>
                                 <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>"<?= $isSelected ? ' style="background-color: #FFDBBB;"' : '' ?>>
-                                    <input 
-                                        type="checkbox" 
-                                        name="email_tags[]" 
-                                        value="<?= htmlspecialchars($tag) ?>" 
-                                        <?= $isSelected ? 'checked' : '' ?>
-                                        onchange="this.form.submit()"
-                                    >
+                                    <input type="checkbox" name="email_tags[]" value="<?= htmlspecialchars($tag) ?>" <?= $isSelected ? 'checked' : '' ?> onchange="this.form.submit()">
+                                    <span><?= htmlspecialchars($tag) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                            <?php foreach ($substackTags as $tag): ?>
+                                <?php $isSelected = !empty($selectedSubstackTags) && in_array($tag, $selectedSubstackTags, true); ?>
+                                <label class="tag-filter-pill<?= $isSelected ? ' tag-filter-pill-active' : '' ?>"<?= $isSelected ? ' style="background-color: #C5B4D1;"' : '' ?>>
+                                    <input type="checkbox" name="substack_tags[]" value="<?= htmlspecialchars($tag) ?>" <?= $isSelected ? 'checked' : '' ?> onchange="this.form.submit()">
                                     <span><?= htmlspecialchars($tag) ?></span>
                                 </label>
                             <?php endforeach; ?>

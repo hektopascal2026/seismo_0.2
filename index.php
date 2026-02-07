@@ -24,6 +24,10 @@ switch ($action) {
         // Get all unique email tags (excluding unclassified)
         $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' AND removed_at IS NULL ORDER BY tag");
         $emailTags = $emailTagsStmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Get all unique Substack tags
+        $substackTagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE source_type = 'substack' AND category IS NOT NULL AND category != '' ORDER BY category");
+        $substackTags = $substackTagsStmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Tag filter: selected tags from query (multi-select)
         // On first visit (no form submitted), auto-select all tags except "unsortiert"
@@ -31,10 +35,12 @@ switch ($action) {
         if ($tagsSubmitted) {
             $selectedTags = isset($_GET['tags']) ? array_values(array_filter((array)$_GET['tags'], 'strlen')) : [];
             $selectedEmailTags = isset($_GET['email_tags']) ? array_values(array_filter((array)$_GET['email_tags'], 'strlen')) : [];
+            $selectedSubstackTags = isset($_GET['substack_tags']) ? array_values(array_filter((array)$_GET['substack_tags'], 'strlen')) : [];
         } else {
             // First visit: auto-select all tags except "unsortiert"
             $selectedTags = array_values(array_filter($tags, function($t) { return $t !== 'unsortiert'; }));
             $selectedEmailTags = array_values(array_filter($emailTags, function($t) { return $t !== 'unsortiert' && $t !== 'unclassified'; }));
+            $selectedSubstackTags = $substackTags; // select all by default
         }
         
         // If search query exists, show search results instead of latest items
@@ -93,16 +99,35 @@ switch ($action) {
             }
         }
         
-        // Fetch Substack items for the main timeline
-        $substackItemsStmt = $pdo->query("
-            SELECT fi.*, f.title as feed_title
-            FROM feed_items fi
-            JOIN feeds f ON fi.feed_id = f.id
-            WHERE f.source_type = 'substack' AND f.disabled = 0
-            ORDER BY fi.published_date DESC, fi.cached_at DESC
-            LIMIT 30
-        ");
-        $substackItems = $substackItemsStmt->fetchAll();
+        // Fetch Substack items for the main timeline, filtered by selected Substack tags
+        if (!empty($selectedSubstackTags)) {
+            $placeholders = implode(',', array_fill(0, count($selectedSubstackTags), '?'));
+            $substackItemsStmt = $pdo->prepare("
+                SELECT fi.*, f.title as feed_title
+                FROM feed_items fi
+                JOIN feeds f ON fi.feed_id = f.id
+                WHERE f.source_type = 'substack' AND f.disabled = 0
+                  AND f.category IN ($placeholders)
+                ORDER BY fi.published_date DESC, fi.cached_at DESC
+                LIMIT 30
+            ");
+            $substackItemsStmt->execute($selectedSubstackTags);
+            $substackItems = $substackItemsStmt->fetchAll();
+        } elseif (!$tagsSubmitted) {
+            // First visit: show all
+            $substackItemsStmt = $pdo->query("
+                SELECT fi.*, f.title as feed_title
+                FROM feed_items fi
+                JOIN feeds f ON fi.feed_id = f.id
+                WHERE f.source_type = 'substack' AND f.disabled = 0
+                ORDER BY fi.published_date DESC, fi.cached_at DESC
+                LIMIT 30
+            ");
+            $substackItems = $substackItemsStmt->fetchAll();
+        } else {
+            // User explicitly deselected all: show nothing
+            $substackItems = [];
+        }
         
         // Merge and sort by date
         $allItems = [];

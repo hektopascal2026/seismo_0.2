@@ -350,34 +350,23 @@ h3 {
 /* Tag Filters */
 .tag-filter-section {
     width: 100%;
-    margin-top: 10px;
-    padding-top: 4px;
-}
-
-.tag-filter-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: #666666;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin-top: 8px;
 }
 
 .tag-filter-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
 }
 
 .tag-filter-pill {
     display: inline-flex;
     align-items: center;
-    padding: 6px 12px;
-    border: 2px solid #000000;
+    padding: 4px 10px;
+    border: 1px solid #000000;
     background-color: #ffffff;
     color: #000000;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
@@ -601,16 +590,16 @@ h3 {
     }
 
     .tag-filter-section {
-        margin-top: 12px;
+        margin-top: 8px;
     }
 
     .tag-filter-list {
-        gap: 6px;
+        gap: 4px;
     }
 
     .tag-filter-pill {
-        padding: 4px 10px;
-        font-size: 12px;
+        padding: 3px 8px;
+        font-size: 11px;
     }
 
     .feed-actions,

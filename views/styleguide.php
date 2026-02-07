@@ -314,36 +314,37 @@
         <!-- Tag Filters -->
         <section class="styleguide-section">
             <h2>Tag Filters</h2>
-            <p>Two filter patterns: checkbox pills (main page, multi-select) and category buttons (RSS, Mail, Substack pages, single-select). Both use 6px 12px padding, 13px font, 500 weight.</p>
+            <p>Two filter patterns: checkbox pills (main page, multi-select) and category buttons (RSS, Mail, Substack pages, single-select).</p>
             
             <h3>Checkbox Pills (Main Page)</h3>
+            <p>All tag types in one compact row. Color distinguishes source: RSS #add8e6, Email #FFDBBB, Substack #C5B4D1. Pill: 4px 10px padding, 12px font, 1px border.</p>
             <div class="component-demo">
-                <p style="margin-bottom: 12px;"><strong>RSS</strong> (active: #add8e6)</p>
-                <div class="tag-filter-list" style="margin-bottom: 20px;">
+                <div class="tag-filter-list">
                     <label class="tag-filter-pill" style="background-color: #add8e6;">
                         <input type="checkbox" checked>
-                        <span>Active Tag</span>
+                        <span>RSS Tag</span>
                     </label>
                     <label class="tag-filter-pill">
                         <input type="checkbox">
-                        <span>Inactive Tag</span>
+                        <span>RSS Inactive</span>
                     </label>
-                </div>
-                
-                <p style="margin-bottom: 12px;"><strong>Email</strong> (active: #FFDBBB)</p>
-                <div class="tag-filter-list">
                     <label class="tag-filter-pill" style="background-color: #FFDBBB;">
                         <input type="checkbox" checked>
-                        <span>Active Tag</span>
+                        <span>Email Tag</span>
+                    </label>
+                    <label class="tag-filter-pill" style="background-color: #C5B4D1;">
+                        <input type="checkbox" checked>
+                        <span>Substack Tag</span>
                     </label>
                     <label class="tag-filter-pill">
                         <input type="checkbox">
-                        <span>Inactive Tag</span>
+                        <span>Inactive</span>
                     </label>
                 </div>
             </div>
             
             <h3>Category Buttons (RSS, Mail, Substack Pages)</h3>
+            <p>Single-select filter on dedicated pages. 6px 12px padding, 13px font, 2px border.</p>
             <div class="component-demo">
                 <div class="category-filter">
                     <a href="#" class="category-btn" style="background-color: #add8e6;">All</a>
