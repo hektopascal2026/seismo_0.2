@@ -731,10 +731,10 @@
                             this.classList.add('tag-saved');
                             this.dataset.originalTag = value;
                             
-                            // Remove saved state after animation
+                            // Remove saved state after feedback
                             setTimeout(() => {
                                 this.classList.remove('tag-saved');
-                            }, 600);
+                            }, 2000);
                         } else {
                             this.classList.remove('tag-saving');
                             alert('Error: ' + (data.error || 'Failed to update tag'));
