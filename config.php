@@ -181,7 +181,15 @@ function initDatabase() {
     } catch (PDOException $e) {
         // Column might already exist, ignore error
         if (strpos($e->getMessage(), 'Duplicate column name') === false) {
-            // Re-throw if it's a different error
+            throw $e;
+        }
+    }
+    
+    // Add removed_at column if it doesn't exist (for existing installations)
+    try {
+        $pdo->exec("ALTER TABLE sender_tags ADD COLUMN removed_at DATETIME DEFAULT NULL AFTER disabled");
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'Duplicate column name') === false) {
             throw $e;
         }
     }

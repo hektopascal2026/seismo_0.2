@@ -22,7 +22,7 @@ switch ($action) {
         $tags = $tagsStmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Get all unique email tags (excluding unclassified)
-        $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' ORDER BY tag");
+        $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' AND removed_at IS NULL ORDER BY tag");
         $emailTags = $emailTagsStmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Tag filter: selected tags from query (multi-select)
@@ -253,15 +253,15 @@ switch ($action) {
         $showAll = isset($_GET['show_all']) || isset($_SESSION['email_refresh_count']);
         $limit = $showAll ? 10000 : 50; // Show all emails when refreshed
         
-        // Get all unique email tags (excluding unclassified)
-        $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' ORDER BY tag");
+        // Get all unique email tags (excluding unclassified and removed senders)
+        $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' AND removed_at IS NULL ORDER BY tag");
         $emailTags = $emailTagsStmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Get selected email tag filter
         $selectedEmailTag = $_GET['email_tag'] ?? null;
         
-        // Get disabled sender emails
-        $disabledStmt = $pdo->query("SELECT from_email FROM sender_tags WHERE disabled = 1");
+        // Get disabled sender emails (including removed senders)
+        $disabledStmt = $pdo->query("SELECT from_email FROM sender_tags WHERE disabled = 1 OR removed_at IS NOT NULL");
         $disabledEmails = $disabledStmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Get table name from session if available (set by refresh function)
@@ -413,7 +413,7 @@ switch ($action) {
                     
                     // Filter by email tag if selected
                     if ($selectedEmailTag) {
-                        $tagStmt = $pdo->prepare("SELECT from_email FROM sender_tags WHERE tag = ?");
+                        $tagStmt = $pdo->prepare("SELECT from_email FROM sender_tags WHERE tag = ? AND removed_at IS NULL");
                         $tagStmt->execute([$selectedEmailTag]);
                         $taggedEmails = $tagStmt->fetchAll(PDO::FETCH_COLUMN);
                         
@@ -591,8 +591,8 @@ switch ($action) {
         $tagsStmt = $pdo->query("SELECT DISTINCT category FROM feeds WHERE category IS NOT NULL AND category != '' ORDER BY category");
         $allTags = $tagsStmt->fetchAll(PDO::FETCH_COLUMN);
         
-        // Get all unique email tags (excluding unclassified)
-        $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' ORDER BY tag");
+        // Get all unique email tags (excluding unclassified and removed senders)
+        $emailTagsStmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' AND removed_at IS NULL ORDER BY tag");
         $allEmailTags = $emailTagsStmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Get all unique senders and their tags for Mail section
@@ -666,33 +666,60 @@ switch ($action) {
                     $senders = [];
                 }
                 
-                // Auto-tag new senders with "unclassified"
-                foreach ($senders as $sender) {
-                    $email = $sender['email'];
-                    $checkStmt = $pdo->prepare("SELECT id FROM sender_tags WHERE from_email = ?");
-                    $checkStmt->execute([$email]);
-                    if (!$checkStmt->fetch()) {
-                        // New sender - auto-tag with "unclassified"
-                        $insertStmt = $pdo->prepare("INSERT INTO sender_tags (from_email, tag, disabled) VALUES (?, 'unclassified', 0)");
-                        $insertStmt->execute([$email]);
-                    }
-                }
+                // Determine which email column and date columns to use for "newer email" checks
+                $emailCol = $hasFromEmail ? 'from_email' : ($hasFromAddr ? 'from_addr' : null);
+                $hasDateReceived = in_array('date_received', $tableColumns);
+                $hasCreatedAt = in_array('created_at', $tableColumns);
                 
-                // Get tags and disabled status for each sender
+                // Auto-tag new senders, re-activate removed senders only if newer emails exist
                 foreach ($senders as $sender) {
                     $email = $sender['email'];
-                    $tagStmt = $pdo->prepare("SELECT tag, disabled FROM sender_tags WHERE from_email = ?");
+                    $tagStmt = $pdo->prepare("SELECT tag, disabled, removed_at FROM sender_tags WHERE from_email = ?");
                     $tagStmt->execute([$email]);
                     $tagResult = $tagStmt->fetch();
-                    $tag = $tagResult ? $tagResult['tag'] : null;
-                    $disabled = $tagResult ? (bool)$tagResult['disabled'] : false;
                     
-                    $senderTags[] = [
-                        'email' => $email,
-                        'name' => $sender['name'],
-                        'tag' => $tag,
-                        'disabled' => $disabled
-                    ];
+                    if (!$tagResult) {
+                        // Genuinely new sender — auto-tag with "unclassified"
+                        $insertStmt = $pdo->prepare("INSERT INTO sender_tags (from_email, tag, disabled) VALUES (?, 'unclassified', 0)");
+                        $insertStmt->execute([$email]);
+                        $tagResult = ['tag' => 'unclassified', 'disabled' => 0, 'removed_at' => null];
+                    } elseif ($tagResult['removed_at'] && $emailCol) {
+                        // Sender was removed — check if a newer email has arrived since removal
+                        $dateCond = [];
+                        if ($hasDateReceived) $dateCond[] = "date_received > ?";
+                        if ($hasCreatedAt) $dateCond[] = "created_at > ?";
+                        
+                        if (!empty($dateCond)) {
+                            $dateWhere = '(' . implode(' OR ', $dateCond) . ')';
+                            $newerStmt = $pdo->prepare("
+                                SELECT 1 FROM `$emailTableName`
+                                WHERE `$emailCol` = ? AND $dateWhere
+                                LIMIT 1
+                            ");
+                            $removedAt = $tagResult['removed_at'];
+                            $params = [$email];
+                            if ($hasDateReceived) $params[] = $removedAt;
+                            if ($hasCreatedAt) $params[] = $removedAt;
+                            $newerStmt->execute($params);
+                            
+                            if ($newerStmt->fetch()) {
+                                // New email arrived after removal — re-activate
+                                $reactivateStmt = $pdo->prepare("UPDATE sender_tags SET removed_at = NULL WHERE from_email = ?");
+                                $reactivateStmt->execute([$email]);
+                                $tagResult['removed_at'] = null;
+                            }
+                        }
+                    }
+                    
+                    // Only show senders that are not removed
+                    if (empty($tagResult['removed_at'])) {
+                        $senderTags[] = [
+                            'email' => $email,
+                            'name' => $sender['name'],
+                            'tag' => $tagResult['tag'],
+                            'disabled' => (bool)$tagResult['disabled']
+                        ];
+                    }
                 }
             }
         } catch (PDOException $e) {
@@ -724,7 +751,7 @@ switch ($action) {
         
     case 'api_email_tags':
         header('Content-Type: application/json');
-        $stmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' ORDER BY tag");
+        $stmt = $pdo->query("SELECT DISTINCT tag FROM sender_tags WHERE tag IS NOT NULL AND tag != '' AND tag != 'unclassified' AND removed_at IS NULL ORDER BY tag");
         $tags = $stmt->fetchAll(PDO::FETCH_COLUMN);
         echo json_encode($tags);
         break;
@@ -930,15 +957,15 @@ function getEmailsForIndex($pdo, $limit = 30, $selectedEmailTags = []) {
     $emails = [];
     
     try {
-        // Get disabled sender emails
-        $disabledStmt = $pdo->query("SELECT from_email FROM sender_tags WHERE disabled = 1");
+        // Get disabled or removed sender emails
+        $disabledStmt = $pdo->query("SELECT from_email FROM sender_tags WHERE disabled = 1 OR removed_at IS NOT NULL");
         $disabledEmails = $disabledStmt->fetchAll(PDO::FETCH_COLUMN);
         
-        // Get emails by selected tags if any
+        // Get emails by selected tags if any (only from active senders)
         $taggedEmails = [];
         if (!empty($selectedEmailTags)) {
             $tagPlaceholders = implode(',', array_fill(0, count($selectedEmailTags), '?'));
-            $tagStmt = $pdo->prepare("SELECT from_email FROM sender_tags WHERE tag IN ($tagPlaceholders)");
+            $tagStmt = $pdo->prepare("SELECT from_email FROM sender_tags WHERE tag IN ($tagPlaceholders) AND removed_at IS NULL");
             $tagStmt->execute($selectedEmailTags);
             $taggedEmails = $tagStmt->fetchAll(PDO::FETCH_COLUMN);
         }
@@ -1101,15 +1128,15 @@ function searchEmails($pdo, $query, $limit = 100, $selectedEmailTags = []) {
     $searchTerm = '%' . $query . '%';
     
     try {
-        // Get disabled sender emails
-        $disabledStmt = $pdo->query("SELECT from_email FROM sender_tags WHERE disabled = 1");
+        // Get disabled or removed sender emails
+        $disabledStmt = $pdo->query("SELECT from_email FROM sender_tags WHERE disabled = 1 OR removed_at IS NOT NULL");
         $disabledEmails = $disabledStmt->fetchAll(PDO::FETCH_COLUMN);
         
-        // Get emails by selected tags if any
+        // Get emails by selected tags if any (only from active senders)
         $taggedEmails = [];
         if (!empty($selectedEmailTags)) {
             $tagPlaceholders = implode(',', array_fill(0, count($selectedEmailTags), '?'));
-            $tagStmt = $pdo->prepare("SELECT from_email FROM sender_tags WHERE tag IN ($tagPlaceholders)");
+            $tagStmt = $pdo->prepare("SELECT from_email FROM sender_tags WHERE tag IN ($tagPlaceholders) AND removed_at IS NULL");
             $tagStmt->execute($selectedEmailTags);
             $taggedEmails = $tagStmt->fetchAll(PDO::FETCH_COLUMN);
         }
@@ -1455,9 +1482,9 @@ function handleDeleteSender($pdo) {
         return;
     }
     
-    // Set tag to 'unclassified' and remove from sender_tags (delete the record)
-    // This way, when a new email from this sender arrives, it will be auto-tagged and re-added
-    $stmt = $pdo->prepare("DELETE FROM sender_tags WHERE from_email = ?");
+    // Mark sender as removed (don't delete — keeps record so auto-tag won't re-add them).
+    // They reappear only when a new email arrives after the removal timestamp.
+    $stmt = $pdo->prepare("UPDATE sender_tags SET removed_at = NOW(), tag = 'unclassified' WHERE from_email = ?");
     $stmt->execute([$fromEmail]);
     
     $_SESSION['success'] = "Sender removed from Seismo.\nFuture emails from this address will be tagged as \"unsortiert\" until you reassign them.\nTo stop receiving these emails, you need to manually unsubscribe from the sender's press releases.";
