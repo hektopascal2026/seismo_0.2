@@ -100,6 +100,9 @@ function initDatabase() {
         }
     }
     
+    // Fix Substack feeds that still have the generic "substack" category — set to their title
+    $pdo->exec("UPDATE feeds SET category = title WHERE source_type = 'substack' AND category = 'substack'");
+    
     // Create feed_items table
     $pdo->exec("CREATE TABLE IF NOT EXISTS feed_items (
         id INT AUTO_INCREMENT PRIMARY KEY,
