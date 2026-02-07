@@ -65,7 +65,7 @@
                         Refreshed: Never
                     <?php endif; ?>
                 </h2>
-                <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
             </div>
 
             <?php if (!empty($mailTableError)): ?>
@@ -107,7 +107,7 @@
                         <div class="entry-full-content"><?= htmlspecialchars($body) ?></div>
                         <div class="entry-actions">
                             <?php if ($hasMore): ?>
-                                <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                                <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
                             <?php endif; ?>
                             <?php if (isset($email['id'])): ?>
                                 <a href="?action=delete_email&id=<?= (int)$email['id'] ?>&confirm=yes" 
@@ -145,11 +145,11 @@
             if (isExpanded) {
                 full.classList.remove('expanded');
                 preview.style.display = '';
-                btn.textContent = 'ausklappen';
+                btn.textContent = '\u25BC expand';
             } else {
                 full.classList.add('expanded');
                 preview.style.display = 'none';
-                btn.textContent = 'einklappen';
+                btn.textContent = '\u25B2 collapse';
             }
         });
 
@@ -157,7 +157,7 @@
             var btn = e.target.closest('.entry-expand-all-btn');
             if (!btn) return;
             
-            var expanding = btn.textContent.trim() === 'ausklappen';
+            var isExpanded = btn.dataset.expanded === 'true';
             var cards = document.querySelectorAll('.entry-card');
             cards.forEach(function(card) {
                 var preview = card.querySelector('.entry-preview');
@@ -165,17 +165,18 @@
                 var entryBtn = card.querySelector('.entry-expand-btn');
                 if (!preview || !full) return;
                 
-                if (expanding) {
+                if (!isExpanded) {
                     full.classList.add('expanded');
                     preview.style.display = 'none';
-                    if (entryBtn) entryBtn.textContent = 'einklappen';
+                    if (entryBtn) entryBtn.textContent = '\u25B2 collapse';
                 } else {
                     full.classList.remove('expanded');
                     preview.style.display = '';
-                    if (entryBtn) entryBtn.textContent = 'ausklappen';
+                    if (entryBtn) entryBtn.textContent = '\u25BC expand';
                 }
             });
-            btn.textContent = expanding ? 'einklappen' : 'ausklappen';
+            btn.dataset.expanded = !isExpanded;
+            btn.textContent = !isExpanded ? '\u25B2 collapse' : '\u25BC expand';
         });
     })();
     </script>

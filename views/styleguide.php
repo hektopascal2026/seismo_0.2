@@ -281,7 +281,7 @@
                     <div class="entry-full-content">This is the full content of the card. It contains much more text than the preview. Cards can contain various types of information and are used throughout the application for displaying feed items, emails, and other content. When expanded, the full text is shown in a pre-wrapped format preserving line breaks.</div>
                     <div class="entry-actions">
                         <a href="#" class="entry-link">Read more →</a>
-                        <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                        <button class="btn btn-secondary entry-expand-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
                     </div>
                 </div>
             </div>
@@ -290,22 +290,22 @@
         <!-- Expand/Collapse Section -->
         <section class="styleguide-section">
             <h2>Expand / Collapse</h2>
-            <p>Entries can be expanded to show full content. Each entry has its own toggle button ("ausklappen" / "einklappen"). A global toggle in the section title row expands or collapses all entries at once.</p>
+            <p>Entries can be expanded to show full content. Each entry has its own toggle button with a triangle indicator: "&#9660; expand" shows the preview, "&#9650; collapse" shows the full content. A global toggle in the section title row expands or collapses all entries at once.</p>
             
             <h3>Section Title with Global Toggle</h3>
             <div class="component-demo">
                 <div class="section-title-row">
                     <h2 class="section-title" style="margin-bottom: 0;">Refreshed: 24.01.2026 12:00</h2>
-                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
+                    <button class="btn btn-secondary entry-expand-all-btn" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
                 </div>
             </div>
             
             <h3>Per-Entry Toggle</h3>
-            <p>Each entry card with content longer than 200 characters shows an "ausklappen" button. When clicked, it reveals the full content and changes to "einklappen".</p>
+            <p>Each entry card with content longer than 200 characters shows a toggle button. "&#9660; expand" reveals the full content, "&#9650; collapse" returns to the preview. The triangle arrow makes the toggle direction visually clear.</p>
             <div class="component-demo">
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <button class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">ausklappen</button>
-                    <button class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">einklappen</button>
+                    <button class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">&#9660; expand</button>
+                    <button class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">&#9650; collapse</button>
                 </div>
             </div>
         </section>
@@ -447,11 +447,11 @@
             if (isExpanded) {
                 full.classList.remove('expanded');
                 preview.style.display = '';
-                btn.textContent = 'ausklappen';
+                btn.textContent = '\u25BC expand';
             } else {
                 full.classList.add('expanded');
                 preview.style.display = 'none';
-                btn.textContent = 'einklappen';
+                btn.textContent = '\u25B2 collapse';
             }
         });
 
@@ -459,7 +459,7 @@
             var btn = e.target.closest('.entry-expand-all-btn');
             if (!btn) return;
             
-            var expanding = btn.textContent.trim() === 'ausklappen';
+            var isExpanded = btn.dataset.expanded === 'true';
             var cards = document.querySelectorAll('.entry-card');
             cards.forEach(function(card) {
                 var preview = card.querySelector('.entry-preview');
@@ -467,17 +467,18 @@
                 var entryBtn = card.querySelector('.entry-expand-btn');
                 if (!preview || !full) return;
                 
-                if (expanding) {
+                if (!isExpanded) {
                     full.classList.add('expanded');
                     preview.style.display = 'none';
-                    if (entryBtn) entryBtn.textContent = 'einklappen';
+                    if (entryBtn) entryBtn.textContent = '\u25B2 collapse';
                 } else {
                     full.classList.remove('expanded');
                     preview.style.display = '';
-                    if (entryBtn) entryBtn.textContent = 'ausklappen';
+                    if (entryBtn) entryBtn.textContent = '\u25BC expand';
                 }
             });
-            btn.textContent = expanding ? 'einklappen' : 'ausklappen';
+            btn.dataset.expanded = !isExpanded;
+            btn.textContent = !isExpanded ? '\u25B2 collapse' : '\u25BC expand';
         });
     })();
     </script>
